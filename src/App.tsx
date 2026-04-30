@@ -5,8 +5,8 @@ import {
   muteSfx, unmuteSfx, isSfxMuted,
   enableAudio, playBackground, tryAutoplay, playSound,
 } from "./game/audio";
-import { drawDefenderShape } from "./game/draw";
-import type { DefenderType } from "./game/types";
+import { drawDefenderShape, drawPathogenShape } from "./game/draw";
+import type { DefenderType, PathogenType } from "./game/types";
 
 type Page = "landing" | "game" | "help" | "settings";
 
@@ -339,7 +339,7 @@ function DefenderMiniIcon({ type }: { type: string }) {
     const ctx = c.getContext("2d");
     if (!ctx) return;
     ctx.clearRect(0, 0, 64, 64);
-    drawDefenderShape(ctx, type as DefenderType, 32, 30, 0);
+    drawDefenderShape(ctx, type as DefenderType, 32, 32, 0);
   }, [type]);
   return <canvas ref={ref} width={64} height={64} style={{ display: "block" }} />;
 }
@@ -431,7 +431,7 @@ function drawInnerDetail(ctx: CanvasRenderingContext2D, type: string, cx: number
 }
 
 // ─── Mini canvas icons for pathogens ─────────────────────────────────────────
-function PathogenMiniIcon({ type, color, accentColor }: { type: string; color: string; accentColor: string }) {
+function PathogenMiniIcon({ type }: { type: string }) {
   const ref = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
     const c = ref.current;
@@ -439,104 +439,11 @@ function PathogenMiniIcon({ type, color, accentColor }: { type: string; color: s
     const ctx = c.getContext("2d");
     if (!ctx) return;
     ctx.clearRect(0, 0, 64, 64);
-    const cx = 32, cy = 34;
-    ctx.save();
-    switch (type) {
-      case "parasite":
-        ctx.fillStyle = color;
-        for (let i = 0; i < 4; i++) {
-          ctx.beginPath(); ctx.arc(cx+8-i*7, cy, 11-i*2, 0, Math.PI*2); ctx.fill();
-        }
-        ctx.fillStyle = accentColor;
-        ctx.beginPath(); ctx.arc(cx+8, cy, 11, 0, Math.PI*2); ctx.fill();
-        ctx.fillStyle = "#ffeb00";
-        ctx.beginPath(); ctx.arc(cx+4, cy-5, 3, 0, Math.PI*2); ctx.arc(cx+12, cy-5, 3, 0, Math.PI*2); ctx.fill();
-        ctx.fillStyle = "#000";
-        ctx.beginPath(); ctx.arc(cx+4, cy-5, 1.5, 0, Math.PI*2); ctx.arc(cx+12, cy-5, 1.5, 0, Math.PI*2); ctx.fill();
-        break;
-      case "protozoa":
-        ctx.fillStyle = color;
-        ctx.beginPath();
-        for (let i = 0; i <= 6; i++) {
-          const a = (i/6)*Math.PI*2; const r2 = 18+Math.sin(a*3)*5;
-          const px = cx+Math.cos(a)*r2, py = cy+Math.sin(a)*r2;
-          i===0 ? ctx.moveTo(px,py) : ctx.lineTo(px,py);
-        }
-        ctx.closePath(); ctx.fill();
-        ctx.fillStyle = accentColor;
-        ctx.beginPath(); ctx.arc(cx, cy, 10, 0, Math.PI*2); ctx.fill();
-        ctx.fillStyle = "#ffeb00";
-        ctx.beginPath(); ctx.arc(cx-6, cy-8, 2.5, 0, Math.PI*2); ctx.arc(cx+6, cy-8, 2.5, 0, Math.PI*2); ctx.fill();
-        break;
-      case "fungi":
-        ctx.fillStyle = "#8b6f47";
-        ctx.fillRect(cx-5, cy-2, 10, 18);
-        ctx.fillStyle = color;
-        ctx.beginPath(); ctx.ellipse(cx, cy-6, 20, 15, 0, 0, Math.PI*2); ctx.fill();
-        ctx.fillStyle = accentColor;
-        ctx.beginPath(); ctx.arc(cx-8, cy-8, 3.5, 0, Math.PI*2); ctx.arc(cx+6, cy-4, 4.5, 0, Math.PI*2); ctx.arc(cx, cy-13, 3, 0, Math.PI*2); ctx.fill();
-        ctx.fillStyle = "#ffeb00";
-        ctx.beginPath(); ctx.arc(cx-4, cy+4, 2.5, 0, Math.PI*2); ctx.arc(cx+4, cy+4, 2.5, 0, Math.PI*2); ctx.fill();
-        ctx.fillStyle = "#000";
-        ctx.beginPath(); ctx.arc(cx-4, cy+4, 1.2, 0, Math.PI*2); ctx.arc(cx+4, cy+4, 1.2, 0, Math.PI*2); ctx.fill();
-        break;
-      case "prokaryote":
-        ctx.strokeStyle = accentColor; ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        for (let i = 0; i <= 10; i++) {
-          const fx = cx+12+i*1.8; const fy = cy+Math.sin(i*0.7)*4;
-          i===0 ? ctx.moveTo(fx,fy) : ctx.lineTo(fx,fy);
-        }
-        ctx.stroke();
-        ctx.fillStyle = color;
-        ctx.beginPath(); ctx.ellipse(cx, cy, 16, 10, 0, 0, Math.PI*2); ctx.fill();
-        ctx.fillStyle = accentColor;
-        ctx.beginPath(); ctx.ellipse(cx-4, cy-2, 13, 7, 0, 0, Math.PI*2); ctx.fill();
-        ctx.fillStyle = "#ffeb00";
-        ctx.beginPath(); ctx.arc(cx-4, cy-2, 2.5, 0, Math.PI*2); ctx.arc(cx+4, cy-2, 2.5, 0, Math.PI*2); ctx.fill();
-        break;
-      case "virus":
-        ctx.fillStyle = color;
-        ctx.beginPath();
-        for (let i = 0; i <= 8; i++) {
-          const a = (i/8)*Math.PI*2;
-          const px = cx+Math.cos(a)*14, py = cy+Math.sin(a)*14;
-          i===0 ? ctx.moveTo(px,py) : ctx.lineTo(px,py);
-        }
-        ctx.closePath(); ctx.fill();
-        ctx.strokeStyle = accentColor; ctx.lineWidth = 2;
-        for (let i = 0; i < 10; i++) {
-          const a = (i/10)*Math.PI*2;
-          ctx.beginPath();
-          ctx.moveTo(cx+Math.cos(a)*14, cy+Math.sin(a)*14);
-          ctx.lineTo(cx+Math.cos(a)*21, cy+Math.sin(a)*21);
-          ctx.stroke();
-          ctx.fillStyle = accentColor;
-          ctx.beginPath(); ctx.arc(cx+Math.cos(a)*21, cy+Math.sin(a)*21, 2, 0, Math.PI*2); ctx.fill();
-        }
-        ctx.fillStyle = "#ffeb00";
-        ctx.beginPath(); ctx.arc(cx, cy, 4.5, 0, Math.PI*2); ctx.fill();
-        break;
-      case "prion":
-        ctx.fillStyle = color;
-        for (let i = 0; i < 5; i++) {
-          const a = (i/5)*Math.PI*2;
-          ctx.beginPath(); ctx.arc(cx+Math.cos(a)*9, cy+Math.sin(a)*9, 13, 0, Math.PI*2); ctx.fill();
-        }
-        ctx.fillStyle = accentColor;
-        ctx.beginPath(); ctx.arc(cx, cy, 14, 0, Math.PI*2); ctx.fill();
-        ctx.fillStyle = "#ff3030";
-        ctx.beginPath(); ctx.arc(cx, cy, 5, 0, Math.PI*2); ctx.fill();
-        ctx.fillStyle = "#fff";
-        ctx.beginPath(); ctx.arc(cx-8, cy-10, 4, 0, Math.PI*2); ctx.arc(cx+8, cy-10, 4, 0, Math.PI*2); ctx.fill();
-        ctx.fillStyle = "#c00";
-        ctx.beginPath(); ctx.arc(cx-8, cy-10, 2, 0, Math.PI*2); ctx.arc(cx+8, cy-10, 2, 0, Math.PI*2); ctx.fill();
-        break;
-    }
-    ctx.restore();
-  }, [type, color, accentColor]);
+    drawPathogenShape(ctx, type as PathogenType, 32, 32);
+  }, [type]);
   return <canvas ref={ref} width={64} height={64} style={{ display: "block" }} />;
 }
+
 
 // ─── Help Page ────────────────────────────────────────────────────────────────
 function HelpPage({ onBack }: { onBack: () => void }) {
@@ -615,6 +522,7 @@ function HelpPage({ onBack }: { onBack: () => void }) {
       position: "relative", overflow: "hidden", padding: "1.5rem",
       fontFamily: "system-ui, sans-serif",
     }}>
+      <style>{`::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:rgba(20,2,6,0.8);border-radius:999px}::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#aa2233,#6b0011);border-radius:999px}::-webkit-scrollbar-thumb:hover{background:linear-gradient(180deg,#cc3344,#880016)}body{scrollbar-width:thin;scrollbar-color:#aa2233 rgba(20,2,6,0.8)}`}</style>
       <AnimatedBackground />
       <div style={{
         position: "relative", zIndex: 10,
@@ -624,17 +532,27 @@ function HelpPage({ onBack }: { onBack: () => void }) {
         background: "rgba(40,6,10,0.93)",
         backdropFilter: "blur(10px)",
         boxShadow: "0 0 60px rgba(200,20,40,0.15), 0 8px 40px rgba(0,0,0,0.6)",
-        padding: "2.5rem",
         opacity: visible ? 1 : 0,
         transform: visible ? "translateY(0)" : "translateY(20px)",
         transition: "opacity 0.5s ease, transform 0.5s ease",
         marginTop: "1rem",
         marginBottom: "1rem",
+        overflow: "hidden",
       }}>
-        <h2 style={{
-          fontSize: "1.75rem", fontWeight: 900, textAlign: "center", marginBottom: "1.75rem",
-          color: "#fff", letterSpacing: "0.15em", fontFamily: "'Courier New',monospace",
-        }}>HOW TO PLAY</h2>
+        {/* Header band */}
+        <div style={{
+          padding: "1.25rem 1.5rem",
+          background: "rgba(25,4,8,0.8)",
+          borderBottom: "1px solid #5a1010",
+          display: "flex", alignItems: "center", justifyContent: "center",
+        }}>
+          <div style={{
+            fontSize: "1.4rem", fontWeight: 900, letterSpacing: "0.2em",
+            color: "#fff", fontFamily: "'Courier New', monospace",
+          }}>HOW TO PLAY</div>
+        </div>
+
+        <div style={{ padding: "2.5rem" }}>
 
         {/* Core rules */}
         <div style={{ color: "#bb8899", fontSize: "0.92rem", lineHeight: 1.7, marginBottom: "1.75rem" }}>
@@ -662,16 +580,7 @@ function HelpPage({ onBack }: { onBack: () => void }) {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(185px, 1fr))", gap: "0.75rem" }}>
             {defenders.map((d) => (
               <div key={d.type} style={card}>
-                <div style={{
-                  width: 64, height: 64,
-                  borderRadius: "50%",
-                  background: `radial-gradient(circle at 35% 35%, ${lighten(d.color)}, ${d.color}55)`,
-                  border: `2px solid ${d.color}66`,
-                  overflow: "hidden",
-                  flexShrink: 0,
-                }}>
-                  <DefenderMiniIcon type={d.type} />
-                </div>
+                <DefenderMiniIcon type={d.type} />
                 <div style={{ textAlign: "center" }}>
                   <div style={{ color: "#fff", fontWeight: 700, fontSize: "0.88rem" }}>{d.name}</div>
                   <div style={{ display: "flex", gap: "0.4rem", justifyContent: "center", margin: "0.25rem 0" }}>
@@ -704,15 +613,7 @@ function HelpPage({ onBack }: { onBack: () => void }) {
                 alignItems: "flex-start",
                 gap: "0.75rem",
               }}>
-                <div style={{
-                  width: 64, height: 64, flexShrink: 0,
-                  borderRadius: "50%",
-                  background: `radial-gradient(circle at 35% 35%, ${p.accentColor}88, ${p.color}55)`,
-                  border: `2px solid ${p.color}66`,
-                  overflow: "hidden",
-                }}>
-                  <PathogenMiniIcon type={p.type} color={p.color} accentColor={p.accentColor} />
-                </div>
+                <PathogenMiniIcon type={p.type} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", marginBottom: "0.25rem" }}>
                     <span style={{ color: "#fff", fontWeight: 700, fontSize: "0.88rem" }}>{p.name}</span>
@@ -754,6 +655,7 @@ function HelpPage({ onBack }: { onBack: () => void }) {
             borderBottom: "5px solid #440a10",
           }}
         >← BACK</button>
+        </div>{/* end inner padding div */}
       </div>
     </div>
   );
@@ -962,7 +864,7 @@ function App() {
           onSettings={() => setPage("settings")}
         />
       )}
-      {page === "game" && <Game />}
+      {page === "game" && <Game onMainMenu={() => setPage("landing")} />}
       {page === "help" && <HelpPage onBack={() => setPage("landing")} />}
       {page === "settings" && <SettingsPage onBack={() => setPage("landing")} />}
     </>

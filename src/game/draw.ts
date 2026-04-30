@@ -626,6 +626,179 @@ export function drawPathogen(ctx: CanvasRenderingContext2D, p: Pathogen, time: n
   ctx.fillRect(bx, by, w * Math.max(0, p.hp / p.maxHp), 3);
 }
 
+export function drawPathogenShape(ctx: CanvasRenderingContext2D, type: PathogenType, cx: number, cy: number) {
+  const cfg = PATHOGENS[type];
+  const size = cfg.size;
+  switch (type) {
+    case "parasite": {
+      ctx.fillStyle = cfg.color;
+      for (let i = 0; i < 4; i++) {
+        ctx.beginPath();
+        ctx.arc(cx - i * 6 + 8, cy, size * 0.4 - i * 2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.fillStyle = cfg.accentColor;
+      ctx.beginPath();
+      ctx.arc(cx + 8, cy, size * 0.4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#ffeb00";
+      ctx.beginPath();
+      ctx.arc(cx + 4, cy - 4, 3, 0, Math.PI * 2);
+      ctx.arc(cx + 12, cy - 4, 3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#000";
+      ctx.beginPath();
+      ctx.arc(cx + 4, cy - 4, 1.5, 0, Math.PI * 2);
+      ctx.arc(cx + 12, cy - 4, 1.5, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+    }
+    case "protozoa": {
+      ctx.fillStyle = cfg.color;
+      ctx.beginPath();
+      const lobes = 6;
+      for (let i = 0; i <= lobes; i++) {
+        const a = (i / lobes) * Math.PI * 2;
+        const r = size * 0.5 + Math.sin(a * 3) * 4;
+        const px = cx + Math.cos(a) * r;
+        const py = cy + Math.sin(a) * r;
+        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = cfg.accentColor;
+      ctx.beginPath();
+      ctx.arc(cx, cy, size * 0.3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "rgba(0,0,0,0.4)";
+      ctx.beginPath();
+      ctx.arc(cx - 4, cy - 4, 3, 0, Math.PI * 2);
+      ctx.arc(cx + 5, cy + 3, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#ffeb00";
+      ctx.beginPath();
+      ctx.arc(cx - 6, cy - 8, 2.5, 0, Math.PI * 2);
+      ctx.arc(cx + 6, cy - 8, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+    }
+    case "fungi": {
+      ctx.fillStyle = "#8b6f47";
+      ctx.fillRect(cx - 6, cy - 2, 12, size * 0.5);
+      ctx.fillStyle = cfg.color;
+      ctx.beginPath();
+      ctx.ellipse(cx, cy - 6, size * 0.55, size * 0.4, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = cfg.accentColor;
+      ctx.beginPath();
+      ctx.arc(cx - 8, cy - 8, 3, 0, Math.PI * 2);
+      ctx.arc(cx + 6, cy - 4, 4, 0, Math.PI * 2);
+      ctx.arc(cx, cy - 12, 3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#ffeb00";
+      ctx.beginPath();
+      ctx.arc(cx - 4, cy + 4, 2.5, 0, Math.PI * 2);
+      ctx.arc(cx + 4, cy + 4, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#000";
+      ctx.beginPath();
+      ctx.arc(cx - 4, cy + 4, 1.2, 0, Math.PI * 2);
+      ctx.arc(cx + 4, cy + 4, 1.2, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+    }
+    case "prokaryote": {
+      ctx.strokeStyle = cfg.accentColor;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      for (let i = 0; i <= 12; i++) {
+        const fx = cx + 12 + i * 2;
+        const fy = cy + Math.sin(i * 0.7) * 4;
+        if (i === 0) ctx.moveTo(fx, fy); else ctx.lineTo(fx, fy);
+      }
+      ctx.stroke();
+      ctx.fillStyle = cfg.color;
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, size * 0.5, size * 0.32, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = cfg.accentColor;
+      ctx.beginPath();
+      ctx.ellipse(cx - 4, cy - 2, size * 0.4, size * 0.22, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#ffeb00";
+      ctx.beginPath();
+      ctx.arc(cx - 4, cy - 2, 2, 0, Math.PI * 2);
+      ctx.arc(cx + 4, cy - 2, 2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#000";
+      ctx.beginPath();
+      ctx.arc(cx - 4, cy - 2, 1, 0, Math.PI * 2);
+      ctx.arc(cx + 4, cy - 2, 1, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+    }
+    case "virus": {
+      ctx.fillStyle = cfg.color;
+      ctx.beginPath();
+      const sides = 8;
+      for (let i = 0; i <= sides; i++) {
+        const a = (i / sides) * Math.PI * 2;
+        const px = cx + Math.cos(a) * size * 0.45;
+        const py = cy + Math.sin(a) * size * 0.45;
+        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = cfg.accentColor;
+      ctx.lineWidth = 2;
+      for (let i = 0; i < 12; i++) {
+        const a = (i / 12) * Math.PI * 2;
+        ctx.beginPath();
+        ctx.moveTo(cx + Math.cos(a) * size * 0.45, cy + Math.sin(a) * size * 0.45);
+        ctx.lineTo(cx + Math.cos(a) * size * 0.65, cy + Math.sin(a) * size * 0.65);
+        ctx.stroke();
+        ctx.fillStyle = cfg.accentColor;
+        ctx.beginPath();
+        ctx.arc(cx + Math.cos(a) * size * 0.65, cy + Math.sin(a) * size * 0.65, 2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.fillStyle = "#ffeb00";
+      ctx.beginPath();
+      ctx.arc(cx, cy, 4, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+    }
+    case "prion": {
+      ctx.fillStyle = cfg.color;
+      for (let i = 0; i < 5; i++) {
+        const a = (i / 5) * Math.PI * 2;
+        ctx.beginPath();
+        ctx.arc(cx + Math.cos(a) * 8, cy + Math.sin(a) * 8, size * 0.3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.fillStyle = cfg.accentColor;
+      ctx.beginPath();
+      ctx.arc(cx, cy, size * 0.35, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#ff3030";
+      ctx.beginPath();
+      ctx.arc(cx, cy, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#fff";
+      ctx.beginPath();
+      ctx.arc(cx - 8, cy - 10, 4, 0, Math.PI * 2);
+      ctx.arc(cx + 8, cy - 10, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#c00";
+      ctx.beginPath();
+      ctx.arc(cx - 8, cy - 10, 2, 0, Math.PI * 2);
+      ctx.arc(cx + 8, cy - 10, 2, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+    }
+  }
+}
+
 export function drawProjectile(ctx: CanvasRenderingContext2D, p: Projectile) {
   if (p.kind === "antibody") {
     // Y-shaped antibody

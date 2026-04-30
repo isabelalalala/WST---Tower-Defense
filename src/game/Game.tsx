@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { GameState, DefenderType } from "./types";
 import { DEFENDERS, PATHOGENS, CANVAS_W, CANVAS_H, WAVES, ROWS, INFLAMMATION_THRESHOLD, applyDifficulty, getDifficulty, type Difficulty } from "./config";
 import { createInitialState, tick, startWave, clickAtCanvas, hoverAtCanvas, canPlaceAt, recomputeInflammation } from "./engine";
-import { enableAudio, playSound, playBackground, stopBackground, muteAudio, unmuteAudio, isAudioMuted } from "./audio";
+import { enableAudio, playSound, playBackground, stopBackground, muteAudio, unmuteAudio, isAudioMuted, muteMusic, unmuteMusic, isMusicMuted, muteSfx, unmuteSfx, isSfxMuted } from "./audio";
 import {
   drawBackground,
   drawDefender,
@@ -12,10 +12,11 @@ import {
   drawAtpDrop,
   drawHoverCell,
   drawDefenderShape,
+  drawPathogenShape,
 } from "./draw";
-import { AlertTriangle, Zap, Heart, Shield, Syringe } from "lucide-react";
+import { AlertTriangle, Zap, Heart, Shield, Syringe, Menu, X, Play, Pause, BookOpen, Settings2 } from "lucide-react";
 
-export function Game() {
+export function Game({ onMainMenu }: { onMainMenu?: () => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const stateRef = useRef<GameState>(createInitialState());
   const [, force] = useState(0);
@@ -25,6 +26,7 @@ export function Game() {
   const [difficulty, setDifficultyState] = useState<Difficulty>(getDifficulty());
   const [shouldUnpauseOnClose, setShouldUnpauseOnClose] = useState(false);
   const [shoveMode, setShoveMode] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
 
   // Start music as soon as game opens
   useEffect(() => {
@@ -223,56 +225,24 @@ export function Game() {
               {s.wave === 0 ? "Start Wave 1" : `Begin Wave ${s.wave + 1}`}
             </button>
           )}
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => {
-                stateRef.current.paused = !stateRef.current.paused;
-                if (stateRef.current.paused) {
-                  try { stopBackground(); } catch (e) {}
-                } else {
-                  try { playBackground(); } catch (e) {}
-                }
-                try { playSound("ui_click"); } catch (e) {}
-                force((x) => (x + 1) % 100000);
-              }}
-              className="px-3 py-1.5 rounded-md text-sm border border-border bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground transition"
-              style={{ fontFamily: "'Rajdhani', sans-serif", fontWeight: 600, letterSpacing: "0.04em" }}
-            >
-              {stateRef.current.paused ? "Resume" : "Pause"}
-            </button>
-
-            <button
-              onClick={() => {
-                if (!stateRef.current.paused) {
-                  stateRef.current.paused = true;
-                  setShouldUnpauseOnClose(true);
-                }
-                setShowHelp(true);
-                try { playSound("ui_click"); } catch (e) {}
-                force((x) => (x + 1) % 100000);
-              }}
-              className="px-3 py-1.5 rounded-md text-sm border border-border bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground transition"
-              style={{ fontFamily: "'Rajdhani', sans-serif", fontWeight: 600, letterSpacing: "0.04em" }}
-            >
-              How to play
-            </button>
-
-            <button
-              onClick={() => {
-                if (!stateRef.current.paused) {
-                  stateRef.current.paused = true;
-                  setShouldUnpauseOnClose(true);
-                }
-                setShowSettings(true);
-                try { playSound("ui_click"); } catch (e) {}
-                force((x) => (x + 1) % 100000);
-              }}
-              className="px-3 py-1.5 rounded-md text-sm border border-border bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground transition"
-              style={{ fontFamily: "'Rajdhani', sans-serif", fontWeight: 600, letterSpacing: "0.04em" }}
-            >
-              Settings
-            </button>
-          </div>
+          {/* Single menu button */}
+          <button
+            onClick={() => {
+              // Auto-pause when opening menu (music keeps playing)
+              if (!stateRef.current.paused) {
+                stateRef.current.paused = true;
+                setShouldUnpauseOnClose(true);
+              }
+              setShowMenu(true);
+              try { playSound("ui_click"); } catch (e) {}
+              force((x) => (x + 1) % 100000);
+            }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm border border-border bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground transition"
+            style={{ fontFamily: "'Rajdhani', sans-serif", fontWeight: 600, letterSpacing: "0.04em" }}
+          >
+            <Menu className="w-4 h-4" />
+            Menu
+          </button>
         </div>
       </header>
 
@@ -415,16 +385,41 @@ export function Game() {
         </div>
       </div>
 
-      {/* Help modal */}
-      {showHelp && (
-        <HelpModal
+      {/* Menu popup */}
+      {showMenu && (
+        <MenuModal
           onClose={() => {
-            setShowHelp(false);
+            setShowMenu(false);
             if (shouldUnpauseOnClose) {
               stateRef.current.paused = false;
               setShouldUnpauseOnClose(false);
               force((x) => (x + 1) % 100000);
             }
+          }}
+          onHowToPlay={() => {
+            setShowMenu(false);
+            setShowHelp(true);
+          }}
+          onSettings={() => {
+            setShowMenu(false);
+            setShowSettings(true);
+          }}
+          onMainMenu={() => {
+            setShowMenu(false);
+            setShouldUnpauseOnClose(false);
+            stateRef.current = createInitialState();
+            if (onMainMenu) onMainMenu();
+            else force((x) => (x + 1) % 100000);
+          }}
+        />
+      )}
+
+      {/* Help modal */}
+      {showHelp && (
+        <HelpModal
+          onClose={() => {
+            setShowHelp(false);
+            setShowMenu(true);
           }}
         />
       )}
@@ -433,11 +428,7 @@ export function Game() {
         <SettingsModal
           onClose={() => {
             setShowSettings(false);
-            if (shouldUnpauseOnClose) {
-              stateRef.current.paused = false;
-              setShouldUnpauseOnClose(false);
-              force((x) => (x + 1) % 100000);
-            }
+            setShowMenu(true);
           }}
           muted={muted}
           onToggleMute={() => {
@@ -481,64 +472,302 @@ function DefenderIcon({ type }: { type: DefenderType }) {
   return <canvas ref={ref} width={60} height={60} className="pointer-events-none" />;
 }
 
-function HelpModal({ onClose }: { onClose: () => void }) {
+function PathogenIcon({ type }: { type: keyof typeof PATHOGENS }) {
+  const ref = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    const c = ref.current;
+    if (!c) return;
+    const ctx = c.getContext("2d");
+    if (!ctx) return;
+    ctx.clearRect(0, 0, 48, 48);
+    drawPathogenShape(ctx, type, 24, 24, 0);
+  }, [type]);
+  return <canvas ref={ref} width={48} height={48} className="pointer-events-none" />;
+}
+
+function MenuModal({ onClose, onHowToPlay, onSettings, onMainMenu }: {
+  onClose: () => void;
+  onHowToPlay: () => void;
+  onSettings: () => void;
+  onMainMenu: () => void;
+}) {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => { const t = setTimeout(() => setVisible(true), 60); return () => clearTimeout(t); }, []);
+
+  const menuBtn: React.CSSProperties = {
+    width: "100%", display: "flex", alignItems: "center", justifyContent: "center",
+    gap: "0.5rem", padding: "0.8rem 1rem", borderRadius: "0.75rem",
+    fontSize: "0.9rem", fontWeight: 700, letterSpacing: "0.08em",
+    cursor: "pointer", transition: "all 0.15s ease",
+    fontFamily: "system-ui, sans-serif",
+    background: "rgba(18,3,8,0.7)", color: "#ccaabb",
+    border: "1px solid #4a0e0e",
+  };
+
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+      onClick={onClose}
+    >
       <div
-        className="max-w-2xl w-full max-h-[85vh] overflow-y-auto bg-card border border-border rounded-xl p-6 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
+        style={{
+          maxWidth: "360px", width: "100%",
+          background: "rgba(40,6,10,0.97)",
+          border: "2px solid #7a1c1c",
+          borderRadius: "1.75rem",
+          boxShadow: "0 0 60px rgba(200,20,40,0.15), 0 8px 40px rgba(0,0,0,0.6)",
+          overflow: "hidden",
+          opacity: visible ? 1 : 0,
+          transform: visible ? "translateY(0)" : "translateY(20px)",
+          transition: "opacity 0.4s ease, transform 0.4s ease",
+          fontFamily: "system-ui, sans-serif",
+        }}
       >
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold">How to Play</h2>
-          <button onClick={onClose} className="text-muted-foreground hover:text-foreground text-xl">×</button>
+        {/* Header */}
+        <div style={{
+          padding: "1.25rem 1.5rem",
+          background: "rgba(25,4,8,0.8)",
+          borderBottom: "1px solid #5a1010",
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+        }}>
+          <div style={{
+            fontSize: "1.4rem", fontWeight: 900, letterSpacing: "0.2em",
+            color: "#fff", fontFamily: "'Courier New', monospace",
+          }}>
+            PAUSED
+          </div>
+          <button
+            onClick={onClose}
+            style={{
+              background: "none", border: "none", cursor: "pointer",
+              color: "#664455", fontSize: "1.4rem", lineHeight: 1,
+              transition: "color 0.15s",
+              padding: "2px 6px", borderRadius: "0.4rem",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = "#ffaabb")}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "#664455")}
+          >×</button>
         </div>
 
-        <div className="space-y-4 text-sm">
-          <section>
-            <h3 className="font-semibold text-base mb-1 text-rose-300">The Battlefield</h3>
-            <p className="text-muted-foreground">
-              Five lanes of arteries run through the body. Pathogens enter from the right and march toward your bloodstream entry on the left. If even one breaks through, you lose.
-            </p>
-          </section>
+        {/* Buttons */}
+        <div style={{ padding: "1.25rem", display: "flex", flexDirection: "column", gap: "0.6rem" }}>
 
-          <section>
-            <h3 className="font-semibold text-base mb-1 text-amber-300">Resources</h3>
-            <p className="text-muted-foreground">
-              <strong className="text-amber-300">ATP</strong> is your currency. Stem Cells generate ATP drops that you click to collect. Each defender has an ATP cost and a cooldown before you can deploy it again.
-            </p>
-          </section>
+          {/* Resume — green accent like original, but refined */}
+          <button
+            onClick={onClose}
+            style={{
+              ...menuBtn,
+              background: "linear-gradient(135deg,#16a34a,#15803d)",
+              color: "#fff",
+              border: "2px solid #22c55e",
+              boxShadow: "0 0 20px rgba(34,197,94,0.25)",
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = "linear-gradient(135deg,#22c55e,#16a34a)"; e.currentTarget.style.boxShadow = "0 0 28px rgba(34,197,94,0.4)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = "linear-gradient(135deg,#16a34a,#15803d)"; e.currentTarget.style.boxShadow = "0 0 20px rgba(34,197,94,0.25)"; }}
+          >
+            <Play style={{ width: "1rem", height: "1rem" }} /> Resume
+          </button>
 
-          <section>
-            <h3 className="font-semibold text-base mb-1 text-yellow-300">⚠ Inflammation</h3>
-            <p className="text-muted-foreground">
-              Place too many cells in one lane (3+) and that lane becomes inflamed. Pathogens move slower through inflamed lanes — but Stem Cells in those lanes generate ATP at half speed. Plan your placement.
-            </p>
-          </section>
+          {/* How to Play */}
+          <button
+            onClick={onHowToPlay}
+            style={menuBtn}
+            onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(30,8,14,0.9)"; e.currentTarget.style.color = "#fff"; e.currentTarget.style.borderColor = "#7a1c1c"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(18,3,8,0.7)"; e.currentTarget.style.color = "#ccaabb"; e.currentTarget.style.borderColor = "#4a0e0e"; }}
+          >
+            <BookOpen style={{ width: "1rem", height: "1rem", color: "#38bdf8" }} /> How to Play
+          </button>
 
-          <section>
-            <h3 className="font-semibold text-base mb-2 text-rose-300">Defenders</h3>
-            <ul className="space-y-1.5 text-muted-foreground">
-              {(Object.keys(DEFENDERS) as DefenderType[]).map((t) => (
-                <li key={t}>
-                  <strong className="text-foreground">{DEFENDERS[t].name}</strong> — {DEFENDERS[t].description}
-                </li>
-              ))}
-            </ul>
-          </section>
+          {/* Settings */}
+          <button
+            onClick={onSettings}
+            style={menuBtn}
+            onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(30,8,14,0.9)"; e.currentTarget.style.color = "#fff"; e.currentTarget.style.borderColor = "#7a1c1c"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(18,3,8,0.7)"; e.currentTarget.style.color = "#ccaabb"; e.currentTarget.style.borderColor = "#4a0e0e"; }}
+          >
+            <Settings2 style={{ width: "1rem", height: "1rem", color: "#f87171" }} /> Settings
+          </button>
 
-          <section>
-            <h3 className="font-semibold text-base mb-2 text-rose-300">Pathogens</h3>
-            <ul className="space-y-1.5 text-muted-foreground">
-              {(Object.keys(PATHOGENS) as (keyof typeof PATHOGENS)[]).map((t) => {
-                const c = PATHOGENS[t];
-                return (
-                  <li key={t}>
-                    <strong className="text-foreground">{c.name}</strong> — {c.hp} HP, speed {c.speed}, reward {c.reward} ATP
-                  </li>
-                );
-              })}
-            </ul>
-          </section>
+          {/* Divider */}
+          <div style={{ height: "1px", background: "rgba(100,15,25,0.5)", margin: "0.2rem 0" }} />
+
+          {/* Main Menu — danger red tone */}
+          <button
+            onClick={onMainMenu}
+            style={{
+              ...menuBtn,
+              background: "linear-gradient(135deg,#7f1d1d,#5a0f0f)",
+              color: "#ffbbcc",
+              border: "2px solid #aa2233",
+              borderBottom: "4px solid #440a10",
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = "linear-gradient(135deg,#991b1b,#7f1d1d)"; e.currentTarget.style.color = "#fff"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = "linear-gradient(135deg,#7f1d1d,#5a0f0f)"; e.currentTarget.style.color = "#ffbbcc"; }}
+          >
+            <Shield style={{ width: "1rem", height: "1rem" }} /> Main Menu
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function HelpModal({ onClose }: { onClose: () => void }) {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => { const t = setTimeout(() => setVisible(true), 60); return () => clearTimeout(t); }, []);
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
+      <style>{`.help-scroll::-webkit-scrollbar{width:6px}.help-scroll::-webkit-scrollbar-track{background:rgba(20,2,6,0.8);border-radius:999px}.help-scroll::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#aa2233,#6b0011);border-radius:999px}.help-scroll::-webkit-scrollbar-thumb:hover{background:linear-gradient(180deg,#cc3344,#880016)}.help-scroll{scrollbar-width:thin;scrollbar-color:#aa2233 rgba(20,2,6,0.8)}`}</style>
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          maxWidth: "860px", width: "100%", maxHeight: "90vh",
+          background: "rgba(40,6,10,0.97)",
+          border: "2px solid #7a1c1c",
+          borderRadius: "1.75rem",
+          boxShadow: "0 0 60px rgba(200,20,40,0.15), 0 8px 40px rgba(0,0,0,0.6)",
+          opacity: visible ? 1 : 0,
+          transform: visible ? "translateY(0)" : "translateY(20px)",
+          transition: "opacity 0.4s ease, transform 0.4s ease",
+          fontFamily: "system-ui, sans-serif",
+          display: "flex", flexDirection: "column", overflow: "hidden",
+        }}
+      >
+        {/* Header band — matches MenuModal/SettingsModal */}
+        <div style={{
+          padding: "1.25rem 1.5rem",
+          background: "rgba(25,4,8,0.8)",
+          borderBottom: "1px solid #5a1010",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          flexShrink: 0,
+        }}>
+          <div style={{
+            fontSize: "1.4rem", fontWeight: 900, letterSpacing: "0.2em",
+            color: "#fff", fontFamily: "'Courier New', monospace",
+          }}>HOW TO PLAY</div>
+        </div>
+
+        {/* Scrollable content */}
+        <div className="help-scroll" style={{ overflowY: "auto", padding: "2rem 2.5rem 2.5rem" }}>
+
+        {/* Intro blurbs */}
+        <div style={{ marginBottom: "1.5rem", lineHeight: 1.7, fontSize: "0.95rem" }}>
+          <p style={{ marginBottom: "0.5rem" }}>
+            <span style={{ color: "#ee3344", fontWeight: 700 }}>Goal:</span>{" "}
+            <span style={{ color: "#ccc" }}>Defend your body from pathogens by placing immune cells across 5 artery lanes.</span>
+          </p>
+          <p style={{ marginBottom: "0.5rem" }}>
+            <span style={{ color: "#f59e0b", fontWeight: 700 }}>ATP:</span>{" "}
+            <span style={{ color: "#ccc" }}>Your currency — earned over time and by defeating pathogens. Click ATP drops to collect them!</span>
+          </p>
+          <p>
+            <span style={{ color: "#f59e0b", fontWeight: 700 }}>⚠ Inflammation:</span>{" "}
+            <span style={{ color: "#ccc" }}>Place 3+ defenders in one lane and it becomes inflamed — pathogens slow, but Stem Cells generate ATP at half speed.</span>
+          </p>
+        </div>
+
+        {/* Defenders */}
+        <div style={{ marginBottom: "2rem" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "1rem" }}>
+            <span style={{ color: "#ee3344", fontSize: "1rem" }}>♡</span>
+            <span style={{ color: "#ee3344", fontWeight: 800, letterSpacing: "0.18em", fontSize: "0.85rem", textTransform: "uppercase" }}>Defenders</span>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "0.75rem" }}>
+            {(Object.keys(DEFENDERS) as DefenderType[]).map((type) => {
+              const cfg = DEFENDERS[type];
+              const defenderDescriptions: Record<string, string> = {
+                stem:       "Generates ATP drops over time. Your economic backbone — place early and often.",
+                neutrophil: "Fires antibodies at the first pathogen in its lane. Reliable long-range attacker.",
+                eosinophil: "Chomps pathogens that wander close. Tough melee fighter with big HP.",
+                basophil:   "Releases toxic spore clouds that slow and damage nearby pathogens.",
+                monocyte:   "Leaps forward and squashes the first pathogen in its lane. One-time use.",
+                tcell:      "A buried mine that detonates on contact, dealing massive area damage.",
+                bcell:      "Fires antibody bursts across 3 adjacent lanes simultaneously. Premium power.",
+                platelet:   "Ignites the entire lane in fire, burning all pathogens passing through.",
+              };
+              return (
+                <div key={type} style={{
+                  background: "rgba(18,3,8,0.8)", border: "1px solid #4a0e0e",
+                  borderRadius: "0.875rem", padding: "1rem", textAlign: "center",
+                }}>
+                  <div style={{ height: "60px", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "0.5rem" }}>
+                    <DefenderIcon type={type} />
+                  </div>
+                  <div style={{ color: "#fff", fontWeight: 700, fontSize: "0.9rem", marginBottom: "0.4rem" }}>{cfg.name}</div>
+                  <div style={{ display: "flex", gap: "0.35rem", justifyContent: "center", marginBottom: "0.5rem", flexWrap: "wrap" }}>
+                    <span style={{ background: "#1a3a10", color: "#4ade80", fontSize: "0.65rem", fontWeight: 700, padding: "2px 7px", borderRadius: "999px" }}>⚡ {cfg.cost} ATP</span>
+                    <span style={{ background: "#3a1010", color: "#f87171", fontSize: "0.65rem", fontWeight: 700, padding: "2px 7px", borderRadius: "999px" }}>♥ {(cfg as any).hp ?? 1}</span>
+                  </div>
+                  <div style={{ color: "#888", fontSize: "0.75rem", lineHeight: 1.4 }}>{defenderDescriptions[type] ?? cfg.description}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Pathogens */}
+        <div style={{ marginBottom: "2rem" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "1rem" }}>
+            <span style={{ color: "#ee3344", fontSize: "1rem" }}>☣</span>
+            <span style={{ color: "#ee3344", fontWeight: 800, letterSpacing: "0.18em", fontSize: "0.85rem", textTransform: "uppercase" }}>Pathogens</span>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.75rem" }}>
+            {(Object.keys(PATHOGENS) as (keyof typeof PATHOGENS)[]).map((type) => {
+              const c = PATHOGENS[type];
+              const threatColor = c.hp >= 500 ? "#7c3aed" : c.hp >= 300 ? "#ef4444" : c.hp >= 200 ? "#f59e0b" : "#22c55e";
+              const threatLabel = c.hp >= 500 ? "EXTREME" : c.hp >= 300 ? "HIGH" : c.hp >= 200 ? "MEDIUM" : "LOW";
+              const descFallbacks: Record<string, string> = {
+                prokaryote: "Fast rod-shaped bacteria with flagella. Weak but arrives in swarms early on.",
+                virus: "Spiky icosahedral particle — the fastest pathogen. Fragile but dangerously quick.",
+                parasite: "Segmented worm that wiggles through your defenses at moderate speed.",
+                protozoa: "Amoeba-like blob with pseudopods. Harder to kill and hits reasonably hard.",
+                fungi: "Mushroom-shaped invader with high HP. Slow but absorbs a lot of punishment.",
+                prion: "Misfolded protein cluster — the final boss. Massive HP, crushing damage, and a pulsing core that resists most attacks.",
+              };
+              const description = (c as any).description || descFallbacks[type.toLowerCase()] || "";
+              return (
+                <div key={type} style={{
+                  background: "rgba(18,3,8,0.8)", border: "1px solid #4a0e0e",
+                  borderRadius: "0.875rem", padding: "0.875rem 1rem",
+                  display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "0.4rem",
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "0.25rem" }}>
+                    <div style={{ width: "48px", height: "48px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <PathogenIcon type={type} />
+                    </div>
+                    <div>
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", flexWrap: "wrap" }}>
+                        <span style={{ color: "#fff", fontWeight: 700 }}>{c.name}</span>
+                        <span style={{ background: threatColor + "33", color: threatColor, fontSize: "0.6rem", fontWeight: 800, padding: "2px 7px", borderRadius: "999px", letterSpacing: "0.1em" }}>{threatLabel}</span>
+                      </div>
+                      <div style={{ display: "flex", gap: "0.3rem", marginTop: "0.3rem", flexWrap: "wrap" }}>
+                        <span style={{ background: "#0a1a0a", color: "#4ade80", fontSize: "0.65rem", fontWeight: 700, padding: "2px 6px", borderRadius: "999px", border: "1px solid #1a4a1a" }}>HP {c.hp}</span>
+                        <span style={{ background: "#0a0a1a", color: "#60a5fa", fontSize: "0.65rem", fontWeight: 700, padding: "2px 6px", borderRadius: "999px", border: "1px solid #1a1a4a" }}>SPD {c.speed}</span>
+                        <span style={{ background: "#1a0a0a", color: "#f87171", fontSize: "0.65rem", fontWeight: 700, padding: "2px 6px", borderRadius: "999px", border: "1px solid #4a1a1a" }}>DMG {c.damage ?? "—"}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ color: "#888", fontSize: "0.78rem", lineHeight: 1.4 }}>{description}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Back button */}
+        <button
+          onClick={onClose}
+          style={{
+            width: "100%", padding: "0.9rem",
+            borderRadius: "1rem", fontWeight: 700, fontSize: "1rem",
+            letterSpacing: "0.12em", cursor: "pointer",
+            background: "linear-gradient(135deg,#7f1d1d,#5a0f0f)",
+            color: "#ffbbcc", border: "2px solid #aa2233",
+            borderBottom: "5px solid #440a10",
+          }}
+        >← BACK</button>
         </div>
       </div>
     </div>
@@ -553,77 +782,155 @@ function SettingsModal({ onClose, muted, onToggleMute, onRestart, difficulty, on
   difficulty: Difficulty;
   onDifficultyChange: (d: Difficulty) => void;
 }) {
-  const diffColors: Record<Difficulty, string> = {
-    Normal: "#22c55e",
-    Hard:   "#f59e0b",
-    Brutal: "#ef4444",
+  const [musicOn, setMusicOn] = useState(!isMusicMuted());
+  const [sfxOn, setSfxOn] = useState(!isSfxMuted());
+  const [visible, setVisible] = useState(false);
+  useEffect(() => { const t = setTimeout(() => setVisible(true), 60); return () => clearTimeout(t); }, []);
+
+  const section: React.CSSProperties = {
+    borderRadius: "1.25rem", background: "rgba(18,3,8,0.7)",
+    border: "1px solid #4a0e0e", padding: "1.25rem 1.5rem", marginBottom: "0.875rem",
   };
+
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
       <div
-        className="max-w-sm w-full bg-card border border-border rounded-xl p-6 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
+        style={{
+          maxWidth: "400px", width: "100%",
+          background: "rgba(40,6,10,0.97)", border: "2px solid #7a1c1c",
+          borderRadius: "1.75rem",
+          boxShadow: "0 0 60px rgba(200,20,40,0.15), 0 8px 40px rgba(0,0,0,0.6)",
+          overflow: "hidden",
+          opacity: visible ? 1 : 0,
+          transform: visible ? "translateY(0)" : "translateY(20px)",
+          transition: "opacity 0.4s ease, transform 0.4s ease",
+          fontFamily: "system-ui, sans-serif",
+        }}
       >
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold">Settings</h2>
-          <button onClick={onClose} className="text-muted-foreground hover:text-foreground text-xl">×</button>
+        {/* Header */}
+        <div style={{
+          padding: "1.5rem", textAlign: "center",
+          background: "rgba(25,4,8,0.8)", borderBottom: "1px solid #5a1010",
+        }}>
+          <div style={{ fontSize: "1.75rem", fontWeight: 900, letterSpacing: "0.18em", color: "#fff", fontFamily: "'Courier New', monospace" }}>
+            SETTINGS
+          </div>
         </div>
 
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="font-semibold">Audio</div>
-              <div className="text-sm text-muted-foreground">Toggle game sounds and music</div>
+        <div style={{ padding: "1.25rem 1.25rem 0" }}>
+          {/* Audio */}
+          <div style={section}>
+            <div style={{ fontSize: "0.62rem", letterSpacing: "0.22em", textTransform: "uppercase", color: "#663344", marginBottom: "0.875rem" }}>Audio</div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div>
+                <div style={{ color: "#fff", fontWeight: 700 }}>Music</div>
+                <div style={{ color: "#554455", fontSize: "0.75rem", marginTop: "2px" }}>Background soundtrack</div>
+              </div>
+              <SettingsToggle on={musicOn} onToggle={() => {
+                const n = !musicOn; setMusicOn(n);
+                try { playSound("ui_click"); } catch (e) {}
+                if (n) { unmuteMusic(); try { playBackground(); } catch (e) {} } else { muteMusic(); }
+              }} />
             </div>
-            <button
-              onClick={onToggleMute}
-              className="px-3 py-1.5 rounded-md text-sm border border-border bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground transition"
-            >
-              {muted ? "Unmute" : "Mute"}
-            </button>
+            <div style={{ height: "1px", background: "rgba(100,15,25,0.4)", margin: "1rem 0" }} />
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div>
+                <div style={{ color: "#fff", fontWeight: 700 }}>Sound Effects</div>
+                <div style={{ color: "#554455", fontSize: "0.75rem", marginTop: "2px" }}>Attacks, explosions & UI</div>
+              </div>
+              <SettingsToggle on={sfxOn} onToggle={() => {
+                const n = !sfxOn; setSfxOn(n);
+                if (n) { unmuteSfx(); try { playSound("ui_click"); } catch (e) {} } else { muteSfx(); }
+              }} />
+            </div>
           </div>
 
           {/* Difficulty */}
-          <div>
-            <div className="font-semibold mb-1">Difficulty</div>
-            <div className="text-xs text-muted-foreground mb-2">Takes effect on next restart</div>
-            <div className="flex gap-2">
+          <div style={section}>
+            <div style={{ fontSize: "0.62rem", letterSpacing: "0.22em", textTransform: "uppercase", color: "#663344", marginBottom: "0.875rem" }}>Difficulty</div>
+            <div style={{ display: "flex", gap: "0.5rem" }}>
               {(["Normal", "Hard", "Brutal"] as Difficulty[]).map((d) => (
                 <button
                   key={d}
                   onClick={() => onDifficultyChange(d)}
                   style={{
-                    flex: 1,
-                    padding: "0.4rem 0",
-                    borderRadius: "0.5rem",
-                    fontSize: "0.75rem",
-                    fontWeight: 700,
-                    cursor: "pointer",
+                    flex: 1, padding: "0.5rem 0", borderRadius: "0.6rem",
+                    fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.04em", cursor: "pointer",
                     transition: "all 0.15s",
-                    background: difficulty === d ? diffColors[d] + "33" : "transparent",
-                    color: difficulty === d ? diffColors[d] : "#664455",
-                    border: `2px solid ${difficulty === d ? diffColors[d] : "#3a0810"}`,
-                    boxShadow: difficulty === d ? `0 0 12px ${diffColors[d]}55` : "none",
+                    background: difficulty === d ? "linear-gradient(135deg,#ee3344,#aa0022)" : "rgba(35,6,10,0.7)",
+                    color: difficulty === d ? "#fff" : "#664455",
+                    border: difficulty === d ? "2px solid #cc1133" : "1px solid #3a0810",
+                    boxShadow: difficulty === d ? "0 0 16px rgba(200,20,40,0.35)" : "none",
                   }}
                 >{d}</button>
               ))}
             </div>
           </div>
 
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="font-semibold">Restart</div>
-              <div className="text-sm text-muted-foreground">Restart the current run</div>
+          {/* Restart */}
+          <div style={section}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div>
+                <div style={{ color: "#fff", fontWeight: 700 }}>Restart</div>
+                <div style={{ color: "#554455", fontSize: "0.75rem", marginTop: "2px" }}>Restart the current run</div>
+              </div>
+              <button
+                onClick={onRestart}
+                style={{
+                  padding: "0.4rem 0.9rem", borderRadius: "0.5rem", fontSize: "0.8rem",
+                  fontWeight: 700, cursor: "pointer", background: "#be123c",
+                  color: "#fff", border: "none",
+                }}
+              >Restart</button>
             </div>
-            <button
-              onClick={onRestart}
-              className="px-3 py-1.5 rounded-md text-sm border border-border bg-rose-600 hover:bg-rose-500 text-white transition"
-            >
-              Restart
-            </button>
           </div>
+
+          {/* Version */}
+          <div style={{
+            textAlign: "center", padding: "0.625rem", borderRadius: "0.75rem",
+            background: "rgba(14,2,6,0.5)", border: "1px solid #2a0810", marginBottom: "1rem",
+          }}>
+            <span style={{ fontSize: "0.65rem", letterSpacing: "0.2em", color: "#441a22" }}>IMMUNE DEFENSE · VERSION 1.0.0</span>
+          </div>
+        </div>
+
+        {/* Back */}
+        <div style={{ padding: "0 1.25rem 1.5rem" }}>
+          <button
+            onClick={onClose}
+            style={{
+              width: "100%", padding: "0.9rem", borderRadius: "1rem",
+              fontWeight: 700, fontSize: "1rem", letterSpacing: "0.12em", cursor: "pointer",
+              background: "linear-gradient(135deg,#7f1d1d,#5a0f0f)",
+              color: "#ffbbcc", border: "2px solid #aa2233", borderBottom: "5px solid #440a10",
+            }}
+          >← BACK</button>
         </div>
       </div>
     </div>
+  );
+}
+
+function SettingsToggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
+  return (
+    <button
+      onClick={onToggle}
+      style={{
+        width: "60px", height: "32px", borderRadius: "32px", padding: "4px",
+        background: on ? "linear-gradient(135deg,#ee3344,#aa0022)" : "rgba(50,10,16,0.8)",
+        border: on ? "2px solid #cc1133" : "2px solid #441122",
+        boxShadow: on ? "0 0 16px rgba(200,20,40,0.4)" : "none",
+        cursor: "pointer", transition: "all 0.25s ease",
+        display: "flex", alignItems: "center",
+      }}
+    >
+      <div style={{
+        width: "20px", height: "20px", borderRadius: "50%",
+        background: on ? "#fff" : "#553344",
+        transform: on ? "translateX(28px)" : "translateX(0)",
+        transition: "transform 0.25s ease, background 0.25s ease",
+      }} />
+    </button>
   );
 }
