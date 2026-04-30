@@ -3,7 +3,7 @@ import type { DefenderConfig, PathogenConfig, DefenderType, PathogenType } from 
 export const ROWS = 5;
 export const COLS = 9;
 export const CELL_W = 96;
-export const CELL_H = 110;
+export const CELL_H = 140;
 export const GRID_OFFSET_X = 80;
 export const GRID_OFFSET_Y = 80;
 export const CANVAS_W = GRID_OFFSET_X + COLS * CELL_W + 30;

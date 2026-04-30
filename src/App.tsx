@@ -311,20 +311,6 @@ function LandingPage({ onPlay, onHelp, onSettings }: {
             }}
           >⚙ &nbsp;SETTINGS</button>
         </div>
-
-        {/* Stats */}
-        <div style={{
-          display: "flex", gap: "1.5rem", marginTop: "1.75rem",
-          opacity: visible ? 0.5 : 0,
-          transition: "opacity 1s ease 0.5s",
-        }}>
-          {[["7","WAVES"],["8","DEFENDERS"],["6","PATHOGENS"]].map(([v, l]) => (
-            <div key={l} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "2px" }}>
-              <span style={{ fontFamily: "'Courier New',monospace", fontSize: "1.25rem", fontWeight: 700, color: "#cc2244" }}>{v}</span>
-              <span style={{ fontSize: "0.6rem", letterSpacing: "0.18em", color: "#552233" }}>{l}</span>
-            </div>
-          ))}
-        </div>
       </div>
 
       <style>{`
@@ -342,13 +328,303 @@ function LandingPage({ onPlay, onHelp, onSettings }: {
 }
 
 // ─── Help Page ────────────────────────────────────────────────────────────────
+// ─── Mini canvas icons for defenders ─────────────────────────────────────────
+function DefenderMiniIcon({ type, color }: { type: string; color: string }) {
+  const ref = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    const c = ref.current;
+    if (!c) return;
+    const ctx = c.getContext("2d");
+    if (!ctx) return;
+    ctx.clearRect(0, 0, 64, 64);
+    // Draw a coloured circle as the cell base
+    const grad = ctx.createRadialGradient(22, 20, 4, 32, 32, 28);
+    grad.addColorStop(0, lighten(color));
+    grad.addColorStop(1, color);
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(32, 32, 26, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "rgba(0,0,0,0.35)";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.fillStyle = "rgba(255,255,255,0.22)";
+    ctx.beginPath();
+    ctx.ellipse(23, 22, 8, 4, -0.5, 0, Math.PI * 2);
+    ctx.fill();
+    // Type-specific inner detail
+    drawInnerDetail(ctx, type, 32, 32, color);
+  }, [type, color]);
+  return <canvas ref={ref} width={64} height={64} style={{ display: "block" }} />;
+}
+
+function lighten(hex: string): string {
+  const n = parseInt(hex.replace("#", ""), 16);
+  const r = Math.min(255, ((n >> 16) & 0xff) + 80);
+  const g = Math.min(255, ((n >> 8) & 0xff) + 80);
+  const b = Math.min(255, (n & 0xff) + 80);
+  return `rgb(${r},${g},${b})`;
+}
+
+function drawInnerDetail(ctx: CanvasRenderingContext2D, type: string, cx: number, cy: number, color: string) {
+  ctx.save();
+  switch (type) {
+    case "stem":
+      ctx.fillStyle = "#d4a017";
+      for (let i = 0; i < 4; i++) {
+        const a = (i * Math.PI) / 2;
+        ctx.beginPath();
+        ctx.ellipse(cx + Math.cos(a) * 8, cy + Math.sin(a) * 8, 3, 6, a, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.fillStyle = "#fff8c0";
+      ctx.font = "bold 8px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("ATP", cx, cy + 3);
+      break;
+    case "neutrophil":
+      ctx.fillStyle = "#5d3a8a";
+      [[-7,-3],[7,-3],[0,6]].forEach(([lx,ly]) => {
+        ctx.beginPath(); ctx.arc(cx+lx, cy+ly, 5, 0, Math.PI*2); ctx.fill();
+      });
+      break;
+    case "eosinophil":
+      ctx.fillStyle = "#ffb84d";
+      for (let i = 0; i < 7; i++) {
+        const a = (i/7)*Math.PI*2;
+        ctx.beginPath(); ctx.arc(cx+Math.cos(a)*10, cy+Math.sin(a)*10, 2.5, 0, Math.PI*2); ctx.fill();
+      }
+      ctx.fillStyle = "#3a0a14";
+      ctx.beginPath(); ctx.arc(cx, cy+4, 9, 0, Math.PI); ctx.fill();
+      break;
+    case "basophil":
+      ctx.fillStyle = "#4a235a";
+      for (let i = 0; i < 10; i++) {
+        const a = (i/10)*Math.PI*2; const r2 = 6+(i%3)*3;
+        ctx.beginPath(); ctx.arc(cx+Math.cos(a)*r2, cy+Math.sin(a)*r2, 2, 0, Math.PI*2); ctx.fill();
+      }
+      break;
+    case "monocyte":
+      ctx.fillStyle = "#2d4a2a";
+      ctx.beginPath(); ctx.ellipse(cx, cy+2, 12, 8, 0, Math.PI*0.2, Math.PI*1.8); ctx.fill();
+      break;
+    case "tcell":
+      ctx.strokeStyle = "#3a1f10"; ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy-14); ctx.lineTo(cx, cy-22);
+      ctx.moveTo(cx-6, cy-22); ctx.lineTo(cx+6, cy-22);
+      ctx.stroke();
+      ctx.fillStyle = "#ff5e3a";
+      ctx.beginPath(); ctx.arc(cx-6, cy-22, 3, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(cx+6, cy-22, 3, 0, Math.PI*2); ctx.fill();
+      break;
+    case "bcell":
+      ctx.fillStyle = "#1a3a5a";
+      ctx.beginPath(); ctx.arc(cx, cy+2, 8, 0, Math.PI*2); ctx.fill();
+      ctx.strokeStyle = "#fff8e0"; ctx.lineWidth = 2.5; ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(cx, cy-12); ctx.lineTo(cx, cy-21);
+      ctx.moveTo(cx, cy-21); ctx.lineTo(cx-6, cy-27);
+      ctx.moveTo(cx, cy-21); ctx.lineTo(cx+6, cy-27);
+      ctx.stroke();
+      break;
+    case "platelet":
+      ctx.fillStyle = "#ffaa00";
+      ctx.beginPath();
+      ctx.moveTo(cx-6, cy-6);
+      ctx.quadraticCurveTo(cx, cy-18, cx+6, cy-6);
+      ctx.fill();
+      ctx.fillStyle = "#fff066";
+      ctx.beginPath();
+      ctx.moveTo(cx-3, cy-6);
+      ctx.quadraticCurveTo(cx, cy-13, cx+3, cy-6);
+      ctx.fill();
+      break;
+  }
+  ctx.restore();
+}
+
+// ─── Mini canvas icons for pathogens ─────────────────────────────────────────
+function PathogenMiniIcon({ type, color, accentColor }: { type: string; color: string; accentColor: string }) {
+  const ref = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    const c = ref.current;
+    if (!c) return;
+    const ctx = c.getContext("2d");
+    if (!ctx) return;
+    ctx.clearRect(0, 0, 64, 64);
+    const cx = 32, cy = 34;
+    ctx.save();
+    switch (type) {
+      case "parasite":
+        ctx.fillStyle = color;
+        for (let i = 0; i < 4; i++) {
+          ctx.beginPath(); ctx.arc(cx+8-i*7, cy, 11-i*2, 0, Math.PI*2); ctx.fill();
+        }
+        ctx.fillStyle = accentColor;
+        ctx.beginPath(); ctx.arc(cx+8, cy, 11, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = "#ffeb00";
+        ctx.beginPath(); ctx.arc(cx+4, cy-5, 3, 0, Math.PI*2); ctx.arc(cx+12, cy-5, 3, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = "#000";
+        ctx.beginPath(); ctx.arc(cx+4, cy-5, 1.5, 0, Math.PI*2); ctx.arc(cx+12, cy-5, 1.5, 0, Math.PI*2); ctx.fill();
+        break;
+      case "protozoa":
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        for (let i = 0; i <= 6; i++) {
+          const a = (i/6)*Math.PI*2; const r2 = 18+Math.sin(a*3)*5;
+          const px = cx+Math.cos(a)*r2, py = cy+Math.sin(a)*r2;
+          i===0 ? ctx.moveTo(px,py) : ctx.lineTo(px,py);
+        }
+        ctx.closePath(); ctx.fill();
+        ctx.fillStyle = accentColor;
+        ctx.beginPath(); ctx.arc(cx, cy, 10, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = "#ffeb00";
+        ctx.beginPath(); ctx.arc(cx-6, cy-8, 2.5, 0, Math.PI*2); ctx.arc(cx+6, cy-8, 2.5, 0, Math.PI*2); ctx.fill();
+        break;
+      case "fungi":
+        ctx.fillStyle = "#8b6f47";
+        ctx.fillRect(cx-5, cy-2, 10, 18);
+        ctx.fillStyle = color;
+        ctx.beginPath(); ctx.ellipse(cx, cy-6, 20, 15, 0, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = accentColor;
+        ctx.beginPath(); ctx.arc(cx-8, cy-8, 3.5, 0, Math.PI*2); ctx.arc(cx+6, cy-4, 4.5, 0, Math.PI*2); ctx.arc(cx, cy-13, 3, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = "#ffeb00";
+        ctx.beginPath(); ctx.arc(cx-4, cy+4, 2.5, 0, Math.PI*2); ctx.arc(cx+4, cy+4, 2.5, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = "#000";
+        ctx.beginPath(); ctx.arc(cx-4, cy+4, 1.2, 0, Math.PI*2); ctx.arc(cx+4, cy+4, 1.2, 0, Math.PI*2); ctx.fill();
+        break;
+      case "prokaryote":
+        ctx.strokeStyle = accentColor; ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        for (let i = 0; i <= 10; i++) {
+          const fx = cx+12+i*1.8; const fy = cy+Math.sin(i*0.7)*4;
+          i===0 ? ctx.moveTo(fx,fy) : ctx.lineTo(fx,fy);
+        }
+        ctx.stroke();
+        ctx.fillStyle = color;
+        ctx.beginPath(); ctx.ellipse(cx, cy, 16, 10, 0, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = accentColor;
+        ctx.beginPath(); ctx.ellipse(cx-4, cy-2, 13, 7, 0, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = "#ffeb00";
+        ctx.beginPath(); ctx.arc(cx-4, cy-2, 2.5, 0, Math.PI*2); ctx.arc(cx+4, cy-2, 2.5, 0, Math.PI*2); ctx.fill();
+        break;
+      case "virus":
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        for (let i = 0; i <= 8; i++) {
+          const a = (i/8)*Math.PI*2;
+          const px = cx+Math.cos(a)*14, py = cy+Math.sin(a)*14;
+          i===0 ? ctx.moveTo(px,py) : ctx.lineTo(px,py);
+        }
+        ctx.closePath(); ctx.fill();
+        ctx.strokeStyle = accentColor; ctx.lineWidth = 2;
+        for (let i = 0; i < 10; i++) {
+          const a = (i/10)*Math.PI*2;
+          ctx.beginPath();
+          ctx.moveTo(cx+Math.cos(a)*14, cy+Math.sin(a)*14);
+          ctx.lineTo(cx+Math.cos(a)*21, cy+Math.sin(a)*21);
+          ctx.stroke();
+          ctx.fillStyle = accentColor;
+          ctx.beginPath(); ctx.arc(cx+Math.cos(a)*21, cy+Math.sin(a)*21, 2, 0, Math.PI*2); ctx.fill();
+        }
+        ctx.fillStyle = "#ffeb00";
+        ctx.beginPath(); ctx.arc(cx, cy, 4.5, 0, Math.PI*2); ctx.fill();
+        break;
+      case "prion":
+        ctx.fillStyle = color;
+        for (let i = 0; i < 5; i++) {
+          const a = (i/5)*Math.PI*2;
+          ctx.beginPath(); ctx.arc(cx+Math.cos(a)*9, cy+Math.sin(a)*9, 13, 0, Math.PI*2); ctx.fill();
+        }
+        ctx.fillStyle = accentColor;
+        ctx.beginPath(); ctx.arc(cx, cy, 14, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = "#ff3030";
+        ctx.beginPath(); ctx.arc(cx, cy, 5, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = "#fff";
+        ctx.beginPath(); ctx.arc(cx-8, cy-10, 4, 0, Math.PI*2); ctx.arc(cx+8, cy-10, 4, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = "#c00";
+        ctx.beginPath(); ctx.arc(cx-8, cy-10, 2, 0, Math.PI*2); ctx.arc(cx+8, cy-10, 2, 0, Math.PI*2); ctx.fill();
+        break;
+    }
+    ctx.restore();
+  }, [type, color, accentColor]);
+  return <canvas ref={ref} width={64} height={64} style={{ display: "block" }} />;
+}
+
+// ─── Help Page ────────────────────────────────────────────────────────────────
 function HelpPage({ onBack }: { onBack: () => void }) {
   const [visible, setVisible] = useState(false);
   useEffect(() => { const t = setTimeout(() => setVisible(true), 60); return () => clearTimeout(t); }, []);
 
+  const defenders = [
+    { type: "stem",       name: "Stem Cell",   color: "#f5d76e", cost: 50,  hp: 100, desc: "Generates ATP drops over time. Your economic backbone — place early and often." },
+    { type: "neutrophil", name: "Neutrophil",  color: "#e8e8f0", cost: 100, hp: 120, desc: "Fires antibodies at the first pathogen in its lane. Reliable long-range attacker." },
+    { type: "eosinophil", name: "Eosinophil",  color: "#e85a5a", cost: 150, hp: 200, desc: "Chomps pathogens that wander close. Tough melee fighter with big HP." },
+    { type: "basophil",   name: "Basophil",    color: "#9b59b6", cost: 175, hp: 130, desc: "Releases toxic spore clouds that slow and damage nearby pathogens." },
+    { type: "monocyte",   name: "Monocyte",    color: "#5a8c4f", cost: 50,  hp: 1,   desc: "Leaps forward and squashes the first pathogen in its lane. One-time use." },
+    { type: "tcell",      name: "T Cell",      color: "#7d4f30", cost: 25,  hp: 1,   desc: "A buried mine that detonates on contact, dealing massive area damage." },
+    { type: "bcell",      name: "B Cell",      color: "#3498db", cost: 325, hp: 120, desc: "Fires antibody bursts across 3 adjacent lanes simultaneously. Premium power." },
+    { type: "platelet",   name: "Platelets",   color: "#ff5e3a", cost: 125, hp: 1,   desc: "Ignites the entire lane in fire, burning all pathogens passing through." },
+  ];
+
+  const pathogens = [
+    {
+      type: "prokaryote", name: "Prokaryote", color: "#27ae60", accentColor: "#52be80",
+      hp: 150, speed: 22, damage: 6,
+      desc: "Fast rod-shaped bacteria with flagella. Weak but arrives in swarms early on.",
+      threat: "low",
+    },
+    {
+      type: "virus", name: "Virus", color: "#c0392b", accentColor: "#e74c3c",
+      hp: 120, speed: 28, damage: 8,
+      desc: "Spiky icosahedral particle — the fastest pathogen. Fragile but dangerously quick.",
+      threat: "low",
+    },
+    {
+      type: "parasite", name: "Parasite", color: "#8b4789", accentColor: "#b87cb6",
+      hp: 200, speed: 18, damage: 8,
+      desc: "Segmented worm that wiggles through your defenses at moderate speed.",
+      threat: "medium",
+    },
+    {
+      type: "protozoa", name: "Protozoa", color: "#5a7d2a", accentColor: "#8eaf4e",
+      hp: 280, speed: 14, damage: 10,
+      desc: "Amoeba-like blob with pseudopods. Harder to kill and hits reasonably hard.",
+      threat: "medium",
+    },
+    {
+      type: "fungi", name: "Fungi", color: "#c08552", accentColor: "#e0a878",
+      hp: 380, speed: 12, damage: 12,
+      desc: "Mushroom-shaped invader with high HP. Slow but absorbs a lot of punishment.",
+      threat: "high",
+    },
+    {
+      type: "prion", name: "Prion", color: "#34495e", accentColor: "#5d6d7e",
+      hp: 600, speed: 10, damage: 18,
+      desc: "Misfolded protein cluster — the final boss. Massive HP, crushing damage, and a pulsing core that resists most attacks.",
+      threat: "extreme",
+    },
+  ];
+
+  const threatColors: Record<string, string> = {
+    low: "#22c55e", medium: "#f59e0b", high: "#ef4444", extreme: "#a855f7",
+  };
+
+  const card: React.CSSProperties = {
+    background: "rgba(20,4,8,0.75)",
+    border: "1px solid #4a0e18",
+    borderRadius: "1rem",
+    padding: "0.75rem",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    gap: "0.4rem",
+  };
+
   return (
     <div style={{
-      minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
+      minHeight: "100vh", display: "flex", alignItems: "flex-start", justifyContent: "center",
       background: "linear-gradient(160deg,#1a0308 0%,#2a0808 50%,#160210 100%)",
       position: "relative", overflow: "hidden", padding: "1.5rem",
       fontFamily: "system-ui, sans-serif",
@@ -356,55 +632,127 @@ function HelpPage({ onBack }: { onBack: () => void }) {
       <AnimatedBackground />
       <div style={{
         position: "relative", zIndex: 10,
-        maxWidth: "680px", width: "100%",
+        maxWidth: "860px", width: "100%",
         borderRadius: "1.75rem",
         border: "2px solid #7a1c1c",
-        background: "rgba(40,6,10,0.92)",
+        background: "rgba(40,6,10,0.93)",
         backdropFilter: "blur(10px)",
         boxShadow: "0 0 60px rgba(200,20,40,0.15), 0 8px 40px rgba(0,0,0,0.6)",
         padding: "2.5rem",
         opacity: visible ? 1 : 0,
         transform: visible ? "translateY(0)" : "translateY(20px)",
         transition: "opacity 0.5s ease, transform 0.5s ease",
+        marginTop: "1rem",
+        marginBottom: "1rem",
       }}>
         <h2 style={{
-          fontSize: "1.75rem", fontWeight: 900, textAlign: "center", marginBottom: "1.5rem",
+          fontSize: "1.75rem", fontWeight: 900, textAlign: "center", marginBottom: "1.75rem",
           color: "#fff", letterSpacing: "0.15em", fontFamily: "'Courier New',monospace",
         }}>HOW TO PLAY</h2>
 
-        <div style={{ color: "#bb8899", fontSize: "0.95rem", lineHeight: 1.7 }}>
-          <p style={{ marginBottom: "0.75rem" }}>
+        {/* Core rules */}
+        <div style={{ color: "#bb8899", fontSize: "0.92rem", lineHeight: 1.7, marginBottom: "1.75rem" }}>
+          <p style={{ marginBottom: "0.6rem" }}>
             <span style={{ color: "#ff6677", fontWeight: 700 }}>Goal: </span>
             Defend your body from pathogens by placing immune cells across 5 artery lanes.
           </p>
-          <p style={{ marginBottom: "0.75rem" }}>
+          <p style={{ marginBottom: "0.6rem" }}>
             <span style={{ color: "#fbbf24", fontWeight: 700 }}>ATP: </span>
             Your currency — earned over time and by defeating pathogens. Click ATP drops to collect them!
           </p>
-          <p style={{ marginBottom: "1.25rem" }}>
+          <p>
             <span style={{ color: "#fb923c", fontWeight: 700 }}>⚠ Inflammation: </span>
             Place 3+ defenders in one lane and it becomes inflamed — pathogens slow, but Stem Cells generate ATP at half speed.
           </p>
+        </div>
 
-          <div style={{ marginBottom: "1.25rem" }}>
-            <div style={{ color: "#ff6677", fontWeight: 700, marginBottom: "0.5rem" }}>Defenders:</div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.4rem 1rem" }}>
-              {[
-                ["Stem Cell","Generates ATP over time"],
-                ["Neutrophil","Shoots antibodies forward"],
-                ["Eosinophil","Devours nearby pathogens"],
-                ["Basophil","Releases damaging spore clouds"],
-                ["Monocyte","Squashes pathogens in lane"],
-                ["T Cell","Mine that detonates on contact"],
-                ["B Cell","Fires antibodies in 3 lanes"],
-                ["Platelet","Clots the entire lane in fire"],
-              ].map(([name, desc]) => (
-                <div key={name} style={{ fontSize: "0.85rem" }}>
-                  <span style={{ color: "#fff", fontWeight: 600 }}>{name}</span>
-                  <span style={{ color: "#775566" }}> — {desc}</span>
+        {/* Defenders */}
+        <div style={{ marginBottom: "2rem" }}>
+          <div style={{
+            color: "#ff6677", fontWeight: 800, fontSize: "1rem",
+            letterSpacing: "0.12em", textTransform: "uppercase",
+            marginBottom: "1rem", borderBottom: "1px solid #4a1020", paddingBottom: "0.4rem",
+          }}>🛡 Defenders</div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(185px, 1fr))", gap: "0.75rem" }}>
+            {defenders.map((d) => (
+              <div key={d.type} style={card}>
+                <div style={{
+                  width: 64, height: 64,
+                  borderRadius: "50%",
+                  background: `radial-gradient(circle at 35% 35%, ${lighten(d.color)}, ${d.color}55)`,
+                  border: `2px solid ${d.color}66`,
+                  overflow: "hidden",
+                  flexShrink: 0,
+                }}>
+                  <DefenderMiniIcon type={d.type} color={d.color} />
                 </div>
-              ))}
-            </div>
+                <div style={{ textAlign: "center" }}>
+                  <div style={{ color: "#fff", fontWeight: 700, fontSize: "0.88rem" }}>{d.name}</div>
+                  <div style={{ display: "flex", gap: "0.4rem", justifyContent: "center", margin: "0.25rem 0" }}>
+                    <span style={{ fontSize: "0.7rem", background: "#1a0e00", color: "#fbbf24", borderRadius: "0.3rem", padding: "1px 5px", border: "1px solid #7a4a00" }}>
+                      ⚡{d.cost} ATP
+                    </span>
+                    <span style={{ fontSize: "0.7rem", background: "#0a1a0a", color: "#4ade80", borderRadius: "0.3rem", padding: "1px 5px", border: "1px solid #1a4a1a" }}>
+                      ❤ {d.hp}
+                    </span>
+                  </div>
+                  <div style={{ color: "#886677", fontSize: "0.74rem", lineHeight: 1.4 }}>{d.desc}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Pathogens */}
+        <div style={{ marginBottom: "2rem" }}>
+          <div style={{
+            color: "#ff6677", fontWeight: 800, fontSize: "1rem",
+            letterSpacing: "0.12em", textTransform: "uppercase",
+            marginBottom: "1rem", borderBottom: "1px solid #4a1020", paddingBottom: "0.4rem",
+          }}>☣ Pathogens</div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: "0.75rem" }}>
+            {pathogens.map((p) => (
+              <div key={p.type} style={{
+                ...card,
+                flexDirection: "row",
+                alignItems: "flex-start",
+                gap: "0.75rem",
+              }}>
+                <div style={{
+                  width: 64, height: 64, flexShrink: 0,
+                  borderRadius: "50%",
+                  background: `radial-gradient(circle at 35% 35%, ${p.accentColor}88, ${p.color}55)`,
+                  border: `2px solid ${p.color}66`,
+                  overflow: "hidden",
+                }}>
+                  <PathogenMiniIcon type={p.type} color={p.color} accentColor={p.accentColor} />
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", marginBottom: "0.25rem" }}>
+                    <span style={{ color: "#fff", fontWeight: 700, fontSize: "0.88rem" }}>{p.name}</span>
+                    <span style={{
+                      fontSize: "0.62rem", fontWeight: 700, textTransform: "uppercase",
+                      letterSpacing: "0.08em", padding: "1px 5px", borderRadius: "0.3rem",
+                      background: threatColors[p.threat] + "22",
+                      color: threatColors[p.threat],
+                      border: `1px solid ${threatColors[p.threat]}55`,
+                    }}>{p.threat}</span>
+                  </div>
+                  <div style={{ display: "flex", gap: "0.3rem", flexWrap: "wrap", marginBottom: "0.35rem" }}>
+                    <span style={{ fontSize: "0.68rem", background: "#0a1a0a", color: "#4ade80", borderRadius: "0.3rem", padding: "1px 4px", border: "1px solid #1a4a1a" }}>
+                      HP {p.hp}
+                    </span>
+                    <span style={{ fontSize: "0.68rem", background: "#0a0a1a", color: "#60a5fa", borderRadius: "0.3rem", padding: "1px 4px", border: "1px solid #1a1a4a" }}>
+                      SPD {p.speed}
+                    </span>
+                    <span style={{ fontSize: "0.68rem", background: "#1a0a0a", color: "#f87171", borderRadius: "0.3rem", padding: "1px 4px", border: "1px solid #4a1a1a" }}>
+                      DMG {p.damage}
+                    </span>
+                  </div>
+                  <div style={{ color: "#776677", fontSize: "0.74rem", lineHeight: 1.4 }}>{p.desc}</div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 

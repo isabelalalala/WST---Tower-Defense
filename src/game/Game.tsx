@@ -277,8 +277,16 @@ export function Game() {
       </header>
 
       {/* Main play area */}
-      <div className="flex-1 flex items-center justify-center relative overflow-hidden p-1">
-        <div className="relative">
+      <div className="flex-1 flex items-center justify-center relative overflow-hidden" style={{ minHeight: 0 }}>
+        <div
+          className="relative"
+          style={{
+            aspectRatio: `${CANVAS_W} / ${CANVAS_H}`,
+            height: "100%",
+            width: "auto",
+            maxWidth: "100%",
+          }}
+        >
           <canvas
             ref={canvasRef}
             width={CANVAS_W}
@@ -288,7 +296,7 @@ export function Game() {
             onMouseLeave={() => {
               stateRef.current.hoveredCell = null;
             }}
-            className="rounded-lg shadow-2xl border border-rose-900/40 max-w-full max-h-[calc(100vh-175px)]"
+            className="absolute inset-0 w-full h-full rounded-lg shadow-2xl border border-rose-900/40"
             style={{ cursor: s.selectedType ? "crosshair" : "default" }}
           />
 
