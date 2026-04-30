@@ -182,7 +182,7 @@ export function Game() {
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-rose-500 to-rose-700 flex items-center justify-center shadow-lg shadow-rose-500/40">
               <Shield className="w-4 h-4 text-white" />
             </div>
-            <h1 className="text-xl font-bold tracking-tight">
+            <h1 className="text-xl font-bold tracking-tight" style={{ fontFamily: "'Cinzel Decorative', serif" }}>
               Immune <span className="text-primary">Defense</span>
             </h1>
           </div>
@@ -218,6 +218,7 @@ export function Game() {
             <button
               onClick={nextWave}
               className="px-4 py-2 rounded-md bg-rose-600 hover:bg-rose-500 text-white font-semibold text-sm transition shadow-lg shadow-rose-600/30"
+              style={{ fontFamily: "'Rajdhani', sans-serif", fontWeight: 700, letterSpacing: "0.06em" }}
             >
               {s.wave === 0 ? "Start Wave 1" : `Begin Wave ${s.wave + 1}`}
             </button>
@@ -235,6 +236,7 @@ export function Game() {
                 force((x) => (x + 1) % 100000);
               }}
               className="px-3 py-1.5 rounded-md text-sm border border-border bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground transition"
+              style={{ fontFamily: "'Rajdhani', sans-serif", fontWeight: 600, letterSpacing: "0.04em" }}
             >
               {stateRef.current.paused ? "Resume" : "Pause"}
             </button>
@@ -250,6 +252,7 @@ export function Game() {
                 force((x) => (x + 1) % 100000);
               }}
               className="px-3 py-1.5 rounded-md text-sm border border-border bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground transition"
+              style={{ fontFamily: "'Rajdhani', sans-serif", fontWeight: 600, letterSpacing: "0.04em" }}
             >
               How to play
             </button>
@@ -265,6 +268,7 @@ export function Game() {
                 force((x) => (x + 1) % 100000);
               }}
               className="px-3 py-1.5 rounded-md text-sm border border-border bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground transition"
+              style={{ fontFamily: "'Rajdhani', sans-serif", fontWeight: 600, letterSpacing: "0.04em" }}
             >
               Settings
             </button>
@@ -273,7 +277,7 @@ export function Game() {
       </header>
 
       {/* Main play area */}
-      <div className="flex-1 flex items-center justify-center relative overflow-hidden p-4">
+      <div className="flex-1 flex items-center justify-center relative overflow-hidden p-1">
         <div className="relative">
           <canvas
             ref={canvasRef}
@@ -284,7 +288,7 @@ export function Game() {
             onMouseLeave={() => {
               stateRef.current.hoveredCell = null;
             }}
-            className="rounded-lg shadow-2xl border border-rose-900/40 max-w-full max-h-[calc(100vh-260px)]"
+            className="rounded-lg shadow-2xl border border-rose-900/40 max-w-full max-h-[calc(100vh-175px)]"
             style={{ cursor: s.selectedType ? "crosshair" : "default" }}
           />
 
@@ -294,18 +298,19 @@ export function Game() {
               <div className="mb-6 inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-rose-500 to-rose-800 shadow-2xl shadow-rose-500/50">
                 <Shield className="w-10 h-10 text-white" />
               </div>
-              <h1 className="text-5xl font-bold mb-3 tracking-tight">
+              <h1 className="text-5xl font-bold mb-3 tracking-tight" style={{ fontFamily: "'Cinzel Decorative', serif" }}>
                 Immune <span className="text-primary">Defense</span>
               </h1>
-              <p className="text-muted-foreground text-lg max-w-md mb-2">
+              <p className="text-muted-foreground text-lg max-w-md mb-2" style={{ fontFamily: "'Rajdhani', sans-serif" }}>
                 Pathogens are invading the bloodstream.
               </p>
-              <p className="text-muted-foreground max-w-md mb-8">
+              <p className="text-muted-foreground max-w-md mb-8" style={{ fontFamily: "'Rajdhani', sans-serif" }}>
                 Deploy white blood cells along the artery walls. Just don't overcrowd — too many cells trigger inflammation.
               </p>
               <button
                 onClick={startGame}
                 className="px-8 py-3 rounded-lg bg-gradient-to-r from-rose-600 to-rose-500 hover:from-rose-500 hover:to-rose-400 text-white font-bold text-lg transition shadow-xl shadow-rose-600/40"
+                style={{ fontFamily: "'Rajdhani', sans-serif", fontWeight: 700, letterSpacing: "0.1em" }}
               >
                 Begin Defense
               </button>
@@ -316,12 +321,13 @@ export function Game() {
           {s.status === "lost" && (
             <div className="absolute inset-0 rounded-lg bg-black/85 backdrop-blur-sm flex flex-col items-center justify-center text-center px-8">
               <div className="mb-4 text-6xl">☠</div>
-              <h2 className="text-4xl font-bold mb-2 text-rose-400">Infection Spread</h2>
-              <p className="text-muted-foreground mb-1">The pathogens broke through your defenses.</p>
-              <p className="text-muted-foreground mb-6">You held out until wave {s.wave}.</p>
+              <h2 className="text-4xl font-bold mb-2 text-rose-400" style={{ fontFamily: "'Cinzel Decorative', serif" }}>Infection Spread</h2>
+              <p className="text-muted-foreground mb-1" style={{ fontFamily: "'Rajdhani', sans-serif" }}>The pathogens broke through your defenses.</p>
+              <p className="text-muted-foreground mb-6" style={{ fontFamily: "'Rajdhani', sans-serif" }}>You held out until wave {s.wave}.</p>
               <button
                 onClick={restartGame}
                 className="px-6 py-3 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-semibold transition"
+                style={{ fontFamily: "'Rajdhani', sans-serif", fontWeight: 700, letterSpacing: "0.08em" }}
               >
                 Try Again
               </button>
@@ -332,11 +338,12 @@ export function Game() {
           {s.status === "won" && (
             <div className="absolute inset-0 rounded-lg bg-black/85 backdrop-blur-sm flex flex-col items-center justify-center text-center px-8">
               <div className="mb-4 text-6xl">🛡</div>
-              <h2 className="text-4xl font-bold mb-2 text-emerald-400">Immunity Achieved</h2>
-              <p className="text-muted-foreground mb-6">All {WAVES.length} waves repelled. The body is safe.</p>
+              <h2 className="text-4xl font-bold mb-2 text-emerald-400" style={{ fontFamily: "'Cinzel Decorative', serif" }}>Immunity Achieved</h2>
+              <p className="text-muted-foreground mb-6" style={{ fontFamily: "'Rajdhani', sans-serif" }}>All {WAVES.length} waves repelled. The body is safe.</p>
               <button
                 onClick={restartGame}
                 className="px-6 py-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition"
+                style={{ fontFamily: "'Rajdhani', sans-serif", fontWeight: 700, letterSpacing: "0.08em" }}
               >
                 Play Again
               </button>
@@ -356,12 +363,12 @@ export function Game() {
                 force((x) => (x + 1) % 100000);
               }}
               title="Inject (remove defenders)"
-              className={`card-defender relative rounded-lg p-2 w-24 text-left flex flex-col items-center justify-center ${shoveMode ? "selected" : ""}`}
+              className={`card-defender relative rounded-lg p-2 w-28 text-left flex flex-col items-center justify-center ${shoveMode ? "selected" : ""}`}
             >
-              <div className="h-14 flex items-center justify-center relative">
-                <Syringe className="w-8 h-8 text-rose-400" />
+              <div className="h-16 flex items-center justify-center relative">
+                <Syringe className="w-9 h-9 text-rose-400" />
               </div>
-              <div className="text-xs font-semibold text-foreground truncate">INJECT</div>
+              <div className="text-xs font-semibold text-foreground truncate" style={{ fontFamily: "'Rajdhani', sans-serif", fontWeight: 700 }}>INJECT</div>
             </button>
             {(Object.keys(DEFENDERS) as DefenderType[]).map((type) => {
               const cfg = DEFENDERS[type];
@@ -375,16 +382,16 @@ export function Game() {
                   key={type}
                   onClick={() => selectDefender(type)}
                   disabled={disabled}
-                  className={`card-defender relative rounded-lg p-2 w-24 text-left ${selected ? "selected" : ""} ${disabled ? "disabled" : ""}`}
+                  className={`card-defender relative rounded-lg p-2 w-28 text-left ${selected ? "selected" : ""} ${disabled ? "disabled" : ""}`}
                   title={cfg.description}
                 >
-                  <div className="h-14 flex items-center justify-center relative">
+                  <div className="h-16 flex items-center justify-center relative">
                     <DefenderIcon type={type} />
                   </div>
-                  <div className="text-xs font-semibold text-foreground truncate">{cfg.name}</div>
+                  <div className="text-xs font-semibold text-foreground truncate" style={{ fontFamily: "'Rajdhani', sans-serif", fontWeight: 700 }}>{cfg.name}</div>
                   <div className="flex items-center gap-1 mt-0.5">
                     <Zap className="w-3 h-3 text-amber-400" fill="currentColor" />
-                    <span className={`text-xs font-mono font-bold ${tooExpensive ? "text-rose-400" : "text-amber-300"}`}>
+                    <span className={`text-xs font-mono font-bold ${tooExpensive ? "text-rose-400" : "text-amber-300"}`} style={{ fontFamily: "'Rajdhani', sans-serif" }}>
                       {cfg.cost}
                     </span>
                   </div>

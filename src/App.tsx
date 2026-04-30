@@ -604,7 +604,7 @@ function SettingsPage({ onBack }: { onBack: () => void }) {
               border: "2px solid #aa2233",
               borderBottom: "5px solid #440a10",
             }}
-          >← BACK TO MENU</button>
+          >← BACK</button>
         </div>
       </div>
     </div>
