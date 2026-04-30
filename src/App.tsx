@@ -5,6 +5,8 @@ import {
   muteSfx, unmuteSfx, isSfxMuted,
   enableAudio, playBackground, tryAutoplay, playSound,
 } from "./game/audio";
+import { drawDefenderShape } from "./game/draw";
+import type { DefenderType } from "./game/types";
 
 type Page = "landing" | "game" | "help" | "settings";
 
@@ -329,7 +331,7 @@ function LandingPage({ onPlay, onHelp, onSettings }: {
 
 // ─── Help Page ────────────────────────────────────────────────────────────────
 // ─── Mini canvas icons for defenders ─────────────────────────────────────────
-function DefenderMiniIcon({ type, color }: { type: string; color: string }) {
+function DefenderMiniIcon({ type }: { type: string }) {
   const ref = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
     const c = ref.current;
@@ -337,24 +339,8 @@ function DefenderMiniIcon({ type, color }: { type: string; color: string }) {
     const ctx = c.getContext("2d");
     if (!ctx) return;
     ctx.clearRect(0, 0, 64, 64);
-    // Draw a coloured circle as the cell base
-    const grad = ctx.createRadialGradient(22, 20, 4, 32, 32, 28);
-    grad.addColorStop(0, lighten(color));
-    grad.addColorStop(1, color);
-    ctx.fillStyle = grad;
-    ctx.beginPath();
-    ctx.arc(32, 32, 26, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = "rgba(0,0,0,0.35)";
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-    ctx.fillStyle = "rgba(255,255,255,0.22)";
-    ctx.beginPath();
-    ctx.ellipse(23, 22, 8, 4, -0.5, 0, Math.PI * 2);
-    ctx.fill();
-    // Type-specific inner detail
-    drawInnerDetail(ctx, type, 32, 32, color);
-  }, [type, color]);
+    drawDefenderShape(ctx, type as DefenderType, 32, 30, 0);
+  }, [type]);
   return <canvas ref={ref} width={64} height={64} style={{ display: "block" }} />;
 }
 
@@ -684,7 +670,7 @@ function HelpPage({ onBack }: { onBack: () => void }) {
                   overflow: "hidden",
                   flexShrink: 0,
                 }}>
-                  <DefenderMiniIcon type={d.type} color={d.color} />
+                  <DefenderMiniIcon type={d.type} />
                 </div>
                 <div style={{ textAlign: "center" }}>
                   <div style={{ color: "#fff", fontWeight: 700, fontSize: "0.88rem" }}>{d.name}</div>
@@ -767,7 +753,7 @@ function HelpPage({ onBack }: { onBack: () => void }) {
             border: "2px solid #aa2233",
             borderBottom: "5px solid #440a10",
           }}
-        >← BACK TO MENU</button>
+        >← BACK</button>
       </div>
     </div>
   );
