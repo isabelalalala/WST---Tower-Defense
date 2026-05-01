@@ -497,7 +497,10 @@ function HelpPage({ onBack }: { onBack: () => void }) {
       desc: "Misfolded protein cluster — the final boss. Massive HP, crushing damage, and a pulsing core that resists most attacks.",
       threat: "extreme",
     },
-  ];
+  ].sort((a, b) => {
+    const order: Record<string, number> = { low: 0, medium: 1, high: 2, extreme: 3 };
+    return order[a.threat] - order[b.threat];
+  });
 
   const threatColors: Record<string, string> = {
     low: "#22c55e", medium: "#f59e0b", high: "#ef4444", extreme: "#a855f7",
@@ -580,7 +583,7 @@ function HelpPage({ onBack }: { onBack: () => void }) {
               letterSpacing: "0.12em", textTransform: "uppercase",
               marginBottom: "1rem", borderBottom: "1px solid #4a1020", paddingBottom: "0.4rem",
             }}>🛡 Defenders</div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(185px, 1fr))", gap: "0.75rem" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "0.75rem" }}>
               {defenders.map((d) => (
                 <div key={d.type} style={card}>
                   <DefenderMiniIcon type={d.type} />
@@ -607,7 +610,7 @@ function HelpPage({ onBack }: { onBack: () => void }) {
               letterSpacing: "0.12em", textTransform: "uppercase",
               marginBottom: "1rem", borderBottom: "1px solid #4a1020", paddingBottom: "0.4rem",
             }}>☣ Pathogens</div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: "0.75rem" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.75rem" }}>
               {pathogens.map((p) => (
                 <div key={p.type} style={{
                   ...card,

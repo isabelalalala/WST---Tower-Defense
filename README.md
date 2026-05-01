@@ -108,6 +108,26 @@ npm run preview
 | **Fungi** | **HIGH** | Mushroom-shaped invader with high HP. Slow but absorbs a lot of punishment. | HP: 380 \| SPD: 12 \| DMG: 12 |
 | **Prion** | **EXTREME** | Misfolded protein cluster — the final boss. Massive HP and crushing damage. | HP: 600 \| SPD: 10 \| DMG: 18 |
 
+## ⚔️ Difficulty Levels
+
+Immune Defense offers three difficulty settings, selectable from the main menu. Your choice is saved and applied at the start of each run.
+
+| Difficulty | Pathogen HP | Pathogen Speed | Pathogen Damage | Reward | Starting ATP | Spawn Rate | Extra Enemies/Wave |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Normal** | ×1.0 | ×1.0 | ×1.0 | ×1.0 | 150 | ×1.0 | +0 |
+| **Hard** | ×1.4 | ×1.2 | ×1.3 | ×0.85 | 123 | ×0.82 | +1 |
+| **Brutal** | ×1.85 | ×1.5 | ×1.6 | ×0.65 | 90 | ×0.65 | +3 |
+
+### Difficulty Breakdown
+
+- **Normal** — The intended first-time experience. Balanced ATP economy and forgiving enemy stats let you experiment with different defender strategies and learn the inflammation mechanic at your own pace.
+
+- **Hard** — Pathogens are noticeably tankier and faster, rewards are reduced, and enemies spawn more frequently with one additional unit per spawn group. ATP is tighter (123 starting), so efficient placement matters. Recommended for players who have cleared Normal.
+
+- **Brutal** — A ruthless gauntlet. Enemies hit nearly twice as hard, move 50% faster, and arrive in large groups with heavily compressed spawn timers. ATP starts at just 90 and rewards are drastically cut. Every lane decision and ATP expenditure must be deliberate. Inflammation management becomes critical to survival.
+
+> **Pro-Tip:** On Hard and Brutal, prioritize high-value defenders like B Cell and Basophil early — the ATP penalty makes recovering from a weak start very difficult.
+
 ## Project Structure
 
 ```

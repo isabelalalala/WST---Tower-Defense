@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { GameState, DefenderType } from "./types";
-import { DEFENDERS, PATHOGENS, CANVAS_W, CANVAS_H, WAVES, ROWS, INFLAMMATION_THRESHOLD, applyDifficulty, getDifficulty, type Difficulty } from "./config";
+import { DEFENDERS, PATHOGENS, CANVAS_W, CANVAS_H, WAVES, ROWS, INFLAMMATION_THRESHOLD, applyDifficulty, getDifficulty, type Difficulty, GRID_OFFSET_Y, CELL_H } from "./config";
 import { createInitialState, tick, startWave, clickAtCanvas, hoverAtCanvas, canPlaceAt, recomputeInflammation } from "./engine";
 import { enableAudio, playSound, playBackground, stopBackground, muteAudio, unmuteAudio, isAudioMuted, muteMusic, unmuteMusic, isMusicMuted, muteSfx, unmuteSfx, isSfxMuted } from "./audio";
 import {
@@ -73,7 +73,7 @@ export function Game({ onMainMenu }: { onMainMenu?: () => void }) {
         const flicker = Math.sin(s.time * 0.02) > 0;
         if (flicker) {
           ctx.fillStyle = "rgba(255, 200, 50, 0.18)";
-          ctx.fillRect(0, 80 + s.warningRow * 110, CANVAS_W, 110);
+          ctx.fillRect(0, GRID_OFFSET_Y + s.warningRow * CELL_H, CANVAS_W, CELL_H);
         }
       }
 
@@ -708,7 +708,7 @@ function HelpModal({ onClose }: { onClose: () => void }) {
             <span style={{ color: "#ee3344", fontSize: "1rem" }}>♡</span>
             <span style={{ color: "#ee3344", fontWeight: 800, letterSpacing: "0.18em", fontSize: "0.85rem", textTransform: "uppercase" }}>Defenders</span>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "0.75rem" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "0.75rem" }}>
             {(Object.keys(DEFENDERS) as DefenderType[]).map((type) => {
               const cfg = DEFENDERS[type];
               const defenderDescriptions: Record<string, string> = {
@@ -748,7 +748,11 @@ function HelpModal({ onClose }: { onClose: () => void }) {
             <span style={{ color: "#ee3344", fontWeight: 800, letterSpacing: "0.18em", fontSize: "0.85rem", textTransform: "uppercase" }}>Pathogens</span>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.75rem" }}>
-            {(Object.keys(PATHOGENS) as (keyof typeof PATHOGENS)[]).map((type) => {
+            {(Object.keys(PATHOGENS) as (keyof typeof PATHOGENS)[]).sort((a, b) => {
+              const order: Record<string, number> = { low: 0, medium: 1, high: 2, extreme: 3 };
+              const getLevel = (hp: number) => hp >= 500 ? "extreme" : hp >= 300 ? "high" : hp >= 200 ? "medium" : "low";
+              return order[getLevel(PATHOGENS[a].hp)] - order[getLevel(PATHOGENS[b].hp)];
+            }).map((type) => {
               const c = PATHOGENS[type];
               const threatColor = c.hp >= 500 ? "#7c3aed" : c.hp >= 300 ? "#ef4444" : c.hp >= 200 ? "#f59e0b" : "#22c55e";
               const threatLabel = c.hp >= 500 ? "EXTREME" : c.hp >= 300 ? "HIGH" : c.hp >= 200 ? "MEDIUM" : "LOW";
