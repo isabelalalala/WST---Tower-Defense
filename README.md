@@ -1,6 +1,6 @@
-# Immune Defense
+# Immune Defense: A Biological Attrition Strategy
 
-A biological tower defense game played in the bloodstream. Deploy white blood cells along five lanes of arteries to fend off pathogens — but watch out for inflammation!
+Immune Defense is a sophisticated, browser-based tower defense experience that transports players into the microscopic battlefield of the human bloodstream. As a commander of the body’s primary line of defense, you are tasked with deploying specialized leukocytes (white blood cells) across a five-lane arterial grid to intercept and neutralize an escalating barrage of pathogenic invaders. — but watch out for inflammation!
 
 Built with React, TypeScript, Vite, Tailwind CSS, and HTML5 Canvas.
 
@@ -15,6 +15,36 @@ Built with React, TypeScript, Vite, Tailwind CSS, and HTML5 Canvas.
 |:---:|:---:|
 | ![Inflammation](./screenshots/inflammation.png) | ![Instructions](./screenshots/instruction.png) |
 | *Strategic trade-offs in inflamed lanes* | *Clear in-game documentation* |
+
+## 🌟 Key Features
+
+*   **Dynamic Bloodstream Environment:** A custom-built HTML5 Canvas engine that simulates a flowing arterial environment with animated cell particles and scanline effects.[cite: 1, 4]
+*   **Strategic Resource Management:** Balance your ATP economy by placing Stem Cells, but beware of the physical space they occupy.[cite: 4, 5]
+*   **Inflammation System:** A unique "risk-vs-reward" mechanic where over-stacking a lane slows enemies but halves your resource production.[cite: 3, 5]
+
+## 🧬 Why This Game? (Uniqueness)
+
+Unlike standard tower defense games that use static maps, **Immune Defense** uses a biological theme to drive its core mechanics. What makes it unique is the **Inflammation Mechanic**.[cite: 3, 4] Most games encourage you to put all your power in one spot; this game punishes that behavior, forcing you to spread your defenses across all five lanes and think like a real immune system.
+
+## 🛠 Tech Stack
+
+| Category | Technology | Purpose |
+| :--- | :--- | :--- |
+| **Frontend** | React 18 & TypeScript | Component-based UI management and type-safe development. |
+| **Build Tool** | Vite | Fast development server and optimized production bundling. |
+| **Styling** | Tailwind CSS | Utility-first CSS framework for rapid and responsive UI design. |
+| **Rendering** | HTML5 Canvas API | High-performance 2D graphics rendering without external game engines. |
+| **Audio** | Web Audio API | Low-latency audio processing for spatial SFX and background music.[cite: 1] |
+
+## 🏛 Project Architecture
+
+| Module | File | Responsibility |
+| :--- | :--- | :--- |
+| **State Engine** | `engine.ts` | **The Logic Core:** Manages the game loop, physics, collision detection, and inflammation state. |
+| **Graphics Layer** | `draw.ts` | **The View:** A pure-function renderer that converts game state data into Canvas visuals. |
+| **Controller** | `Game.tsx` | **The Interface:** Orchestrates React components, user input listeners, and the DOM-based HUD. |
+| **Configuration** | `config.ts` | **The Balance:** Centralized data for wave definitions and unit statistics (HP, cost, damage). |
+| **Type System** | `types.ts` | **The Blueprint:** Defines global interfaces for entities like Defenders, Pathogens, and Projectiles. |
 
 ## Quick Start
 
@@ -104,6 +134,19 @@ Parasites, Protozoa, Fungi, Prokaryotes, Viruses, and Prions — each with uniqu
 
 All game logic lives in `src/game/`. Rendering is pure HTML5 Canvas — no game framework.
 
-## License
+## 👥 The Team
 
-MIT 
+| Name | Role | GitHub |
+|:--- |:--- |:--- |
+| **Gianna Trisha M. Ainza** | Lead Developer / Game Designer | [@gianainza](https://github.com/gianainza) |
+| **Ma. Isabella B. Arce** | [UI/UX & Frontend Designer ] | [@isabelalalala](https://github.com/isabelalalala) |
+
+## 🎓 Academic Attribution
+
+**UPHSD MOLINO — COLLEGE OF COMPUTER STUDIES**  
+**Web System and Technology Final Project**  
+*2-Week Sprint Game Development*
+
+## 📄 License
+
+MIT — This project is open-source and intended for academic demonstration. Feel free to fork and explore the biological battlefield.
