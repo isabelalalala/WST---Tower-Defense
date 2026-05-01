@@ -692,6 +692,10 @@ function HelpModal({ onClose }: { onClose: () => void }) {
             <span style={{ color: "#f59e0b", fontWeight: 700 }}>ATP:</span>{" "}
             <span style={{ color: "#ccc" }}>Your currency — earned over time and by defeating pathogens. Click ATP drops to collect them!</span>
           </p>
+                      <p>
+              <span style={{ color: "#e7522c", fontWeight: 700 }}>Inject: </span>
+              Remove a defender to recover half of its ATP cost.
+            </p>
           <p>
             <span style={{ color: "#f59e0b", fontWeight: 700 }}>⚠ Inflammation:</span>{" "}
             <span style={{ color: "#ccc" }}>Place 3+ defenders in one lane and it becomes inflamed — pathogens slow, but Stem Cells generate ATP at half speed.</span>
