@@ -167,6 +167,9 @@ export function Game({ onMainMenu }: { onMainMenu?: () => void }) {
     const s = stateRef.current;
     if (s.inWave) return;
     if (s.wave >= WAVES.length) return;
+    // clear awaiting state and unpause before starting next wave
+    s.awaitingNextWave = false;
+    s.paused = false;
     startWave(s, s.wave + 1);
     force((x) => (x + 1) % 100000);
   };
@@ -325,6 +328,33 @@ export function Game({ onMainMenu }: { onMainMenu?: () => void }) {
               >
                 Play Again
               </button>
+            </div>
+          )}
+
+          {/* Wave cleared / Awaiting next wave overlay */}
+          {s.awaitingNextWave && s.status === "playing" && (
+            <div className="absolute inset-0 rounded-lg flex items-center justify-center">
+              <div className="absolute inset-0 bg-black/50 backdrop-blur-sm rounded-lg" />
+              <div className="relative z-10 flex flex-col items-center justify-center text-center px-6 py-4">
+                <h2 className="text-3xl font-bold mb-2 text-amber-300" style={{ fontFamily: "'Cinzel Decorative', serif" }}>
+                  Wave {s.wave} cleared!
+                </h2>
+                <p className="text-muted-foreground mb-4">Prepare your defenses before the next onslaught.</p>
+                <button
+                  onClick={() => {
+                    try { playSound("ui_click"); } catch (e) {}
+                    // ensure awaiting flag cleared and game unpaused
+                    stateRef.current.awaitingNextWave = false;
+                    stateRef.current.paused = false;
+                    nextWave();
+                    force((x) => (x + 1) % 100000);
+                  }}
+                  className="px-6 py-3 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-semibold transition shadow-lg shadow-rose-600/30"
+                  style={{ fontFamily: "'Rajdhani', sans-serif", fontWeight: 700 }}
+                >
+                  Begin the next wave
+                </button>
+              </div>
             </div>
           )}
         </div>
