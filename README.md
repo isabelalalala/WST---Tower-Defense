@@ -138,7 +138,7 @@ npm run preview
         └── Game.tsx      # React shell, HUD, defender deck, modals
 ```
 
-All game logic lives in `src/game/`. Rendering is pure HTML5 Canvas — no game framework.
+All game logic lives in `src/game/`. Rendering is pure HTML5 Canvas no game framework.
 
 ## 👥 The Team
 
