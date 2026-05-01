@@ -4,6 +4,18 @@ A biological tower defense game played in the bloodstream. Deploy white blood ce
 
 Built with React, TypeScript, Vite, Tailwind CSS, and HTML5 Canvas.
 
+## Game Preview
+
+| Main Menu | Strategic Defense |
+|:---:|:---:|
+| ![Main Menu](./screenshots/main_menu.png) | ![Gameplay](./screenshots/gameplay.png) |
+| *Dynamic menu with canvas animations* | *Active pathogen defense across 5 lanes* |
+
+| Inflammation Mechanic | How to Play |
+|:---:|:---:|
+| ![Inflammation](./screenshots/inflammation.png) | ![Instructions](./screenshots/instruction.png) |
+| *Strategic trade-offs in inflamed lanes* | *Clear in-game documentation* |
+
 ## Quick Start
 
 Requires **Node.js 18+** and **npm** (or pnpm/yarn).
@@ -27,6 +39,7 @@ npm run preview
 - **Goal:** Stop pathogens from reaching the left edge of the screen.
 - **ATP** is your currency. Place **Stem Cells** to generate ATP drops — click them to collect.
 - Click a defender card at the bottom, then click a cell on the grid to place it.
+- **Inject** Remove a defender to recover half of its ATP cost.
 - **Inflammation:** if you place 3+ defenders in a single lane, that lane becomes inflamed. Pathogens slow down inside it, but Stem Cells in inflamed lanes generate ATP at half speed. Plan your placement.
 - Survive all 7 waves to win.
 
@@ -53,16 +66,24 @@ Parasites, Protozoa, Fungi, Prokaryotes, Viruses, and Prions — each with uniqu
 .
 ├── index.html
 ├── package.json
+├──package-lock.json
 ├── tsconfig.json
 ├── vite.config.ts
+├── gitignore
 ├── public/
 │   └── favicon.svg
+├── screenshots
+    ├──main_menu.png
+    ├──gameplay.png
+    ├──inflammation.png
+    └──instruction.png
 └── src/
     ├── main.tsx          # React entry point
     ├── App.tsx           # Root component
     ├── index.css         # Tailwind + theme + animations
     └── game/
         ├── types.ts      # State and entity types
+        ├── audio.ts      # Sound effects of the game
         ├── config.ts     # Defender / pathogen stats, wave definitions
         ├── draw.ts       # Canvas rendering for everything
         ├── engine.ts     # Game loop, AI, collisions, inflammation
@@ -73,4 +94,4 @@ All game logic lives in `src/game/`. Rendering is pure HTML5 Canvas — no game 
 
 ## License
 
-MIT — do whatever you like.
+MIT 
